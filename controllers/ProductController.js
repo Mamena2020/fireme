@@ -6,25 +6,38 @@ export default class ProductController {
 
     static async getByName(req, res) {
         const name = req.params.name
-        console.log("name", name)
         const product = await Product.findOne({
             where: [
                 { "field": "name", "operator": "==", "value": name }
             ]
         })
 
-
-
-        res.json({ "message": "get single data", "product": product })
+        res.json({
+            "message": "get single data",
+            "product": product,
+            "media": product?.getMedia()
+        })
     }
 
     static async fetch(req, res) {
         const products = await Product.findAll({
             // where: [{ field: "name", operator: "like", value: "ona" }]
         })
+
+        const productResource = []
+
+        products.forEach((e) => {
+            productResource.push({
+                "id": e.id,
+                "name": e.name,
+                "price": e.price,
+                "medias": e.getMedia()
+            })
+        })
+
         res.json({
             "message": "get products",
-            "products": products
+            "products": productResource
         })
     }
 
@@ -74,10 +87,10 @@ export default class ProductController {
 
         const { new_price, old_price } = req.body
 
-        
+
 
         const updated = await Product.update({
-            fields:{
+            fields: {
                 "price": new_price
             },
             where: [
@@ -87,4 +100,34 @@ export default class ProductController {
         res.json({ "message": updated ? "updated" : "update failed", })
     }
 
+    static async addImage(req, res) {
+
+        const id = req.params.id
+        const { image, name } = req.body
+
+        const product = await Product.findOne({
+            where: [{ "field": "id", "operator": "==", "value": id }]
+        })
+
+        if (!product) return res.json({ "message": "product not found" })
+
+        const media = await product.saveMedia(image, name)
+
+        res.json({ "message": media ? "updated" : "failed", "media": media })
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

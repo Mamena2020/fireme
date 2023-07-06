@@ -19,6 +19,7 @@ export default function api(app) {
     routerGuest.delete("/product/:id", ProductController.delete)
     routerGuest.put("/product/:id", ProductController.update)
     routerGuest.put("/product", ProductController.updateMany)
+    routerGuest.post("/product/:id/image", ProductController.addImage)
     
     
     app.use("/api", routerGuest)

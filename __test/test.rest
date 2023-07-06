@@ -16,7 +16,7 @@ GET http://localhost:5000/api/product
 GET http://localhost:5000/api/product/Andre
 
 ### delete
-DELETE http://localhost:5000/api/product/es9miuucxR0OuGqTECYI
+DELETE http://localhost:5000/api/product/J8yzO99Sp2HFgzzb95St
 
 ### update
 PUT   http://localhost:5000/api/product/lBJLiL4fzXndD8BXYW3b
@@ -33,6 +33,6 @@ Content-Type: application/json
 
 {
     "new_price": 1000,
-    "old_price": 1235
+    "old_price": 2000
 }
 

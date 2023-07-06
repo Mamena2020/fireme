@@ -40,7 +40,7 @@ class FirebaseCore {
     /**
    * Save single media to firebase storage
    * @param {*} file 
-   * @returns {url, path}
+   * @returns {} return url & path
    */
     static async saveMedia(file) {
 
