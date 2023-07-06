@@ -1,4 +1,4 @@
-import User from "../../models/User.js"
+import User from "../../models/Product.js"
 import UserDetail from "../../models/UserDetail.js"
 import { hasMedia } from "../service/Media/MediaService.js"
 import { hasRole } from "../service/RolePermission/Role.js"

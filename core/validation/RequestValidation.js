@@ -43,6 +43,10 @@ const ValidationType = Object.freeze({
     max_digits: "max_digits",
     min_digits: "min_digits",
     digits_between: "digits_between",
+    age_lt: "age_lt",
+    age_lte: "age_lte",
+    age_gt: "age_gt",
+    age_gte: "age_gte",
 })
 
 
@@ -334,8 +338,8 @@ class RequestValidation {
             if (arr.length > 1) {
                 if (arr[0] === ValidationType.match) {
                     let fieldMatch = this.#getData(arr[1])
-                    if (!fieldMatch)
-                        throw "Not right format of validation: " + rule
+                    // if (!fieldMatch)
+                    //     throw "Not right format of validation: " + rule
                     options["fieldMatch"] = fieldMatch
                 }
                 if (arr[0] === ValidationType.max || arr[0] === ValidationType.min) {
@@ -419,6 +423,12 @@ class RequestValidation {
                     options["fieldDigitsFirst"] = params[0]
                     options["fieldDigitsLast"] = params[1]
                 }
+                if (arr[0] === ValidationType.age_lt || arr[0] === ValidationType.age_lte || arr[0] === ValidationType.age_gt || arr[0] === ValidationType.age_gte) {
+                    let params = arr[1]
+                    if (!params || params < 1 || !validator.isInt(params))
+                        throw "Not right format of validation: " + rule
+                    options["fieldAge"] = params
+                }
 
             }
             else {
@@ -494,13 +504,17 @@ class RequestValidation {
             return parseFloat(size) <= parseFloat(options.fieldMaxSize)
         }
 
-        if (ruleName === ValidationType.match)
-            return validator.matches(value ?? " .", options?.fieldMatch ?? " ")
+        if (ruleName === ValidationType.match) {
+            if (!value && options.fieldMatch || value && !options.fieldMatch || !value && !options.fieldMatch) return false
+            return value.toString() === options.fieldMatch.toString()
+        }
 
         if (ruleName === ValidationType.max) {
+            if (value === null || value === undefined)
+                return false
             if (Array.isArray(value))
                 return value.length <= options.fieldMax
-            if (validator.isNumeric(value))
+            if (validator.isNumeric(value.toString()))
                 return validator.isFloat(value.toString() ?? "0", { max: options.fieldMax ?? " " })
 
             return value.toString().length <= options.fieldMax
@@ -508,9 +522,11 @@ class RequestValidation {
         }
 
         if (ruleName === ValidationType.min) {
+            if (value === null || value === undefined)
+                return false
             if (Array.isArray(value))
                 return value.length >= options.fieldMin
-            if (validator.isNumeric(value))
+            if (validator.isNumeric(value.toString()))
                 return validator.isFloat(value.toString() ?? "0", { min: options.fieldMin ?? " " })
 
             return value.toString().length >= options.fieldMax
@@ -561,6 +577,32 @@ class RequestValidation {
             return !validator.isIn(value, options.fieldArray)
         }
 
+        if (ruleName === ValidationType.age_lt) {
+            let newDate = this.#formatDate(value)
+            if (!validator.isDate(newDate.toString()))
+                return false
+            return this.#getAge(value) < options.fieldAge
+        }
+        if (ruleName === ValidationType.age_lte) {
+            let newDate = this.#formatDate(value)
+            if (!validator.isDate(newDate.toString()))
+                return false
+            return this.#getAge(value) <= options.fieldAge
+        }
+        if (ruleName === ValidationType.age_gt) {
+            let newDate = this.#formatDate(value)
+            if (!validator.isDate(newDate.toString()))
+                return false
+            return this.#getAge(value) > options.fieldAge
+        }
+        if (ruleName === ValidationType.age_gte) {
+            let newDate = this.#formatDate(value)
+            if (!validator.isDate(newDate.toString()))
+                return false
+            return this.#getAge(value) >= options.fieldAge
+        }
+
+
         //------------------------------------------------------ has no params
 
         if (ruleName === ValidationType.image) {
@@ -605,6 +647,7 @@ class RequestValidation {
 
         if (ruleName === ValidationType.json)
             return validator.isJSON(value)
+
 
 
         return true
@@ -653,6 +696,17 @@ class RequestValidation {
         webp: "webp",
     }
 
+
+    #getAge(dateString) {
+        var today = new Date();
+        var birthDate = new Date(dateString);
+        var age = today.getFullYear() - birthDate.getFullYear();
+        var m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
 
 
     /**
@@ -755,6 +809,8 @@ class RequestValidation {
             return
         }
     }
+
+
 
 
 

@@ -1,4 +1,4 @@
-import User from "../models/User.js"
+import User from "../models/Product.js"
 import bcrypt from 'bcrypt'
 import RegisterRequest from "../requests/auth/RegisterRequest.js";
 import JwtAuth from "../core/auth/JwtAuth.js";

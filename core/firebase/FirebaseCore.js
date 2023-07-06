@@ -2,10 +2,12 @@
 import admin from "firebase-admin"
 import { v4 as uuid4 } from 'uuid'
 import fse from "fs-extra"
-import firebaseConfig from "../../config/Firebase.js";
+import firebaseConfig from "../config/Firebase.js";
 
-class FirebaseService {
+class FirebaseCore {
 
+
+    static admin = admin
 
     /**
      * Init firebase service to firebase admin
@@ -13,25 +15,25 @@ class FirebaseService {
      */
     static async init() {
 
-        if (admin.apps.length)
-            return
+        // already init return instance of admin
+        if (this.admin.apps.length)
+             return this.admin
 
-        await new Promise(async (resolve, reject) => {
-            return await fse.readFile(firebaseConfig.firebaseServiceAccountFile, 'utf-8', async (error, data) => {
-                if (error) {
-                    console.log("error")
-                    console.error(error)
+            await new Promise(async (resolve, reject) => {
+                try {
+                    const jsonString = await Buffer.from(firebaseConfig.ServiceAccountBase64, 'base64').toString('ascii')
+                    const jsonData = await JSON.parse(jsonString)
+
+                    this.admin.initializeApp({
+                        credential: this.admin.credential.cert(jsonData),
+                        storageBucket: firebaseConfig.firebaseBucket
+                    });
+                    resolve(this.admin)
+                } catch (error) {
+                    console.log(error)
                     reject()
                 }
-                const jsonData = JSON.parse(data);
-
-                admin.initializeApp({
-                    credential: admin.credential.cert(jsonData),
-                    storageBucket: firebaseConfig.firebaseBucket
-                });
-                resolve()
             })
-        })
     }
 
 
@@ -46,7 +48,7 @@ class FirebaseService {
 
             await this.init()
 
-            const bucket = admin.storage().bucket();
+            const bucket = this.admin.storage().bucket();
 
             const fileName = uuid4() + file.extension
 
@@ -91,7 +93,7 @@ class FirebaseService {
 
             await this.init()
             const fileName = path.split("/").pop();
-            const bucket = admin.storage().bucket();
+            const bucket = this.admin.storage().bucket();
             const file = bucket.file(fileName);
 
             file.delete().then(() => {
@@ -147,7 +149,7 @@ class FirebaseService {
         message["token"] = registrationTokens.length === 1 ? registrationTokens[0] : registrationTokens
 
         if (registrationTokens.length === 1) {
-            await admin.messaging().send(message)
+            await this.admin.messaging().send(message)
                 .then((response) => {
                     console.log("Successfully sent message:", response);
                 })
@@ -156,7 +158,7 @@ class FirebaseService {
                 })
         }
         else {
-            await admin.messaging().sendMulticast(message)
+            await this.admin.messaging().sendMulticast(message)
                 .then((response) => {
                     console.log(`${response.successCount} messages were sent successfully`);
                 })
@@ -171,4 +173,4 @@ class FirebaseService {
 }
 
 
-export default FirebaseService
+export default FirebaseCore

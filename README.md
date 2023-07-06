@@ -1,6 +1,6 @@
-# Nodemi
+# Fireme
 
-Boilerplate for nodejs. base on express js.
+Boilerplate for nodejs. base on express js with Firebase.
 
 - Features
 

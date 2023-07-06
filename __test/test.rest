@@ -1,0 +1,38 @@
+### install REST Client extentions, before use this
+### stored
+POST  http://localhost:5000/api/product
+Content-Type: application/json
+
+{
+    "name": "Andre",
+    "price": 7879
+}
+
+
+### fetch
+GET http://localhost:5000/api/product
+
+### fetch one
+GET http://localhost:5000/api/product/Andre
+
+### delete
+DELETE http://localhost:5000/api/product/dG9Vl7JHWdq2CbOtr8eR
+
+### update
+PUT   http://localhost:5000/api/product/lBJLiL4fzXndD8BXYW3b
+Content-Type: application/json
+
+{
+    "name": "Andre2",
+    "price": 78729
+}
+
+### update many
+PUT   http://localhost:5000/api/product
+Content-Type: application/json
+
+{
+    "new_price": 20000,
+    "old_price": 100
+}
+

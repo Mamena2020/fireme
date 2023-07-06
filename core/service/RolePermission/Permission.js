@@ -29,7 +29,10 @@ Permission.init({
         sequelize: db, // We need to pass the connection instance
         tableName: "permissions",
         modelName: 'Permission', // We need to choose the model name
-        timestamps: true
+        timestamps: true,
+        underscored: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at"
     }
 )
 
