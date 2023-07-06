@@ -4,7 +4,7 @@ POST  http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "name": "Andre",
+    "name": "Andr2e",
     "price": 7879
 }
 
@@ -16,15 +16,15 @@ GET http://localhost:5000/api/product
 GET http://localhost:5000/api/product/Andre
 
 ### delete
-DELETE http://localhost:5000/api/product/dG9Vl7JHWdq2CbOtr8eR
+DELETE http://localhost:5000/api/product/es9miuucxR0OuGqTECYI
 
 ### update
 PUT   http://localhost:5000/api/product/lBJLiL4fzXndD8BXYW3b
 Content-Type: application/json
 
 {
-    "name": "Andre2",
-    "price": 78729
+    "name": "Aipassa",
+    "price": 5000
 }
 
 ### update many
@@ -32,7 +32,7 @@ PUT   http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "new_price": 20000,
-    "old_price": 100
+    "new_price": 1000,
+    "old_price": 1235
 }
 

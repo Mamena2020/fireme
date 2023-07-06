@@ -29,7 +29,7 @@ export default class ProductController {
     }
 
     static async stored(req, res) {
-        console.log(req.body)
+        // console.log(req.body)
         const { name, price } = req.body
         if (!name || !price)
             return res.status(422).json({ "message": "name and price required" })
@@ -39,7 +39,6 @@ export default class ProductController {
             "price": price
         }
 
-        // await admin.database().ref("products").push(data) // realtime database
         const product = await Product.stored({ data: data })
 
         res.json({
@@ -63,10 +62,8 @@ export default class ProductController {
                 { "field": "id", "operator": "==", "value": id }
             ]
         })
-        console.log(product)
         if (!product) return res.json({ "message": "not found", })
 
-        console.log(product)
         const updated = await product.update({
             "name": name,
             "price": price
@@ -77,12 +74,14 @@ export default class ProductController {
 
         const { new_price, old_price } = req.body
 
+        
+
         const updated = await Product.update({
             fields:{
                 "price": new_price
             },
             where: [
-                { "field": "price", "operator": ">", "value": old_price }
+                { "field": "price", "operator": "<", "value": old_price }
             ]
         })
         res.json({ "message": updated ? "updated" : "update failed", })
