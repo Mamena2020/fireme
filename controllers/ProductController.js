@@ -87,8 +87,6 @@ export default class ProductController {
 
         const { new_price, old_price } = req.body
 
-
-
         const updated = await Product.update({
             fields: {
                 "price": new_price
@@ -114,6 +112,21 @@ export default class ProductController {
         const media = await product.saveMedia(image, name)
 
         res.json({ "message": media ? "updated" : "failed", "media": media })
+    }
+    static async destroyImage(req, res) {
+
+        const id = req.params.id
+        const name = req.params.name
+
+        const product = await Product.findOne({
+            where: [{ "field": "id", "operator": "==", "value": id }]
+        })
+
+        if (!product) return res.json({ "message": "product not found" })
+
+        const media = await product.destroyMedia(name)
+
+        res.json({ "message": media ? "image deleted" : "failed delete" })
     }
 
 }

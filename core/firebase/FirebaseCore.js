@@ -121,7 +121,7 @@ class FirebaseCore {
             for (let path of paths) {
                 await this.deleteMedia(path)
             }
-            resolve()
+            resolve(true)
         })
     }
 

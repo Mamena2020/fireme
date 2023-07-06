@@ -26,14 +26,14 @@ class Model {
             allowSearch: false,
             reference: ""
         }
-    }, collection = "", hasMedia = false }) {
+    }, collection = "" }) {
 
         this.fields = fields;
         this.collection = collection
     }
 
 
-    static #instance(doc, medias, collection, hasMedia) {
+    static #instance(doc, medias, collection) {
         return {
             destroy: async function () {
                 return await Model.#destroy(this)
@@ -47,11 +47,13 @@ class Model {
             getMedia: function (name) {
                 return Model.#getMedia(this, name)
             },
-            __info: function () {
+            destroyMedia: function (name) {
+                return Model.#destroyMedia(this, name)
+            },
+            _info: function () {
                 return {
                     id: doc.id,
                     collection: collection,
-                    hasMedia: hasMedia,
                     medias: medias
                 }
             },
@@ -135,7 +137,7 @@ class Model {
                                 medias.push(mediaDoc.data())
                             });
                             list.push(
-                                Model.#instance(parentDoc, medias, this.collection, this.hasMedia)
+                                Model.#instance(parentDoc, medias, this.collection,)
                             )
                         })
                     })
@@ -214,7 +216,7 @@ class Model {
                                 medias.push(mediaDoc.data())
                             });
                             list.push(
-                                Model.#instance(parentDoc, medias, this.collection, this.hasMedia)
+                                Model.#instance(parentDoc, medias, this.collection,)
                             )
                         });
                     })
@@ -247,7 +249,7 @@ class Model {
             }
             await docRef.set(dataToStore)
             const snapshot = await docRef.get()
-            return Model.#instance(snapshot, [], this.collection, this.hasMedia)
+            return Model.#instance(snapshot, [], this.collection)
         } catch (error) {
             console.error(error)
         }
@@ -262,11 +264,22 @@ class Model {
     static async #destroy(instance) {
         var status = false
         try {
-            const info = instance.__info()
+            const info = instance._info()
             const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id)
+            
+            // delete all medias
+            if (info.medias.length > 0) {
+                const paths = []
+                for (var media of info.medias) {
+                    paths.push(media.path)
+                }
+                await FirebaseCore.deleteMedias(paths).finally(async () => {
+                    await this.#destroyMedias(docRef)
+                })
+            }
 
             await docRef.delete()
-                .then(() => {
+                .then(async () => {
                     status = true
                 })
         } catch (error) {
@@ -283,12 +296,11 @@ class Model {
     static async destroy(id) {
         var status = false
         try {
-            const docRef = FirebaseCore.admin.firestore().collection(this.collection).doc(id);
-            const docSnapshot = await docRef.get();
-            if (docSnapshot.exists) {
-                await docRef.delete();
-                status = true
-            }
+            const instance = await this.findOne({
+                where: [{ field: 'id', operator: '==', value: id, }]
+            })
+            if (!instance) throw 'not found'
+            status = await instance.destroy()
         } catch (error) {
             console.error("error:", error);
         }
@@ -307,7 +319,7 @@ class Model {
         try {
             if (!newData) throw 'invalid new data'
 
-            const info = instance.__info()
+            const info = instance._info()
             const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id)
             await docRef.update(newData)
                 .then(() => {
@@ -369,7 +381,7 @@ class Model {
             return
         }
 
-        const info = instance.__info()
+        const info = instance._info()
 
         var docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id);
 
@@ -381,7 +393,7 @@ class Model {
         const media = await FirebaseCore.saveMedia(file)
 
         if (!media) return
-
+        var mediaId
         var newMediaData = {
             "name": name,
             "url": media.url,
@@ -391,17 +403,24 @@ class Model {
 
         // create new   
         if (oldMediaDoc.docs.length == 0) {
-            await FirebaseCore.admin.firestore().collection(mediaCollection).add(newMediaData)
-                .then((docRef) => {
-                })
+
+            const mediaRef = FirebaseCore.admin.firestore().collection(mediaCollection).doc();
+            const dataToStore = {
+                id: mediaRef.id,
+                ...newMediaData,
+            }
+            await mediaRef.set(dataToStore)
+            mediaId = mediaRef.id
         }
         else {
             // remove old media
             await FirebaseCore.deleteMedia(oldMediaDoc.docs[0].data()["path"])
             // update 
             await oldMediaDoc.docs[0].ref.update(newMediaData)
+            mediaId = oldMediaDoc.docs[0].ref.id
         }
         return {
+            "id": mediaId,
             "name": name,
             "url": media.url,
             "path": media.path,
@@ -410,10 +429,11 @@ class Model {
 
     static #getMedia(instance, name) {
         if (!instance) return []
-        const info = instance.__info()
+        const info = instance._info()
         const medias = [];
         for (var media of info.medias) {
             var mediaData = {
+                "id": media.id,
                 "name": media.name,
                 "url": media.url,
                 "path": media.path,
@@ -423,9 +443,63 @@ class Model {
             }
             medias.push(mediaData)
         }
-        if(name) return null
+        if (name) return null
         return medias
     }
+
+    static async #destroyMedia(instance, name) {
+
+        var status = false
+        try {
+            const info = instance._info()
+            var media
+            for (var _media of info.medias) {
+                if (name == _media.name) {
+                    media = _media
+                    break;
+                }
+            }
+            if (media == undefined) throw 'media not found'
+            // remove old media
+            await FirebaseCore.deleteMedia(media.path).finally(async () => {
+                const mediaRef = FirebaseCore.admin.firestore().collection(mediaCollection).doc(media.id);
+                const docSnapshot = await mediaRef.get();
+                if (docSnapshot.exists) {
+                    await mediaRef.delete().then(() => {
+                        status = true
+                    });
+                }
+            })
+        } catch (error) {
+            console.error("error: ", error);
+        }
+        return status
+    }
+
+    static async #destroyMedias(instanceRef) {
+        try {
+            await FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", instanceRef).get()
+                .then((querySnapshot) => {
+                    // collect media doc ref
+                    var batch = FirebaseCore.admin.firestore().batch();
+                    querySnapshot.forEach((doc) => {
+                        batch.delete(doc.ref)
+                    })
+                    // run batch 
+                    return batch.commit();
+                })
+                .then(() => {
+                    // console.log("deleted");
+                })
+                .catch((error) => {
+                    console.error("Error: ", error);
+                });
+
+        } catch (error) {
+            console.error("error: ", error)
+        }
+    }
+
 }
 
 export default Model
