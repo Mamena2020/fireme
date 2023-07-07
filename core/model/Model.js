@@ -68,7 +68,7 @@ class Model {
      * @returns list || array
      */
     static async findAll({ where = [], limit = 0 } = {}) {
-        const list = []
+        var list = []
         try {
             var query = FirebaseCore.admin.firestore().collection(this.collection)
 
@@ -80,7 +80,7 @@ class Model {
                     }
                     if (and == undefined || and == true) {
                         if (valueLike) {
-                            console.log(valueLike)
+                            // console.log(valueLike)
                             query = query.where(field, ">=", value).where(field, "<", valueLike)
                         }
                         else {
@@ -100,7 +100,7 @@ class Model {
             if (typeof limit === "number" && limit > 0) {
                 query = query.limit(limit)
             }
-
+            list = await Model.#batchFetch(query)
             // const snapshot = await query.get();
             // for (var doc of snapshot.docs) {
             //     var medias = []
@@ -116,38 +116,7 @@ class Model {
             // }
 
 
-            await query.get()
-                .then(async (parentSnapshot) => {
-                    // create array ref parent
-                    var parentRefs = parentSnapshot.docs.map((parentDoc) => parentDoc.ref)
-                    // init array promise for batch read
-                    var batchGetPromises = []
-                    // create batch read for every ref parent
-                    parentRefs.forEach((parentRef) => {
-                        var media = FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", parentRef)
-                        var batchGetPromise = media.get()
-                        batchGetPromises.push(batchGetPromise);
-                    })
-                    // run batch read at same time
-                    return await Promise.all(batchGetPromises).then((batchResults) => {
-                        batchResults.forEach((mediaSnapshot, index) => {
-                            var parentDoc = parentSnapshot.docs[index];
-                            var medias = []
-                            mediaSnapshot.forEach((mediaDoc) => {
-                                medias.push(mediaDoc.data())
-                            });
-                            list.push(
-                                Model.#instance(parentDoc, medias, this.collection,)
-                            )
-                        })
-                    })
-                        .catch((error) => {
-                            console.error("Error parent & media", error);
-                        })
-                })
-                .catch((error) => {
-                    console.error("Error parent: ", error);
-                })
+
         } catch (error) {
             console.log(error)
         }
@@ -175,64 +144,50 @@ class Model {
             }
             query = query.limit(1)
             // const snapshot = await query.get();
-            const list = [];
-            // for (var doc of snapshot.docs) {
-            //     var medias = []
-            //      await FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", doc.ref).get()
-            //         .then((mediaSnapshot) => {
-            //             for (var mediaDoc of mediaSnapshot.docs) {
-            //                 medias.push(mediaDoc.data())
-            //             }
-            //         })
-            //     list.push(
-            //         Model.#instance(doc, medias, this.collection, this.hasMedia)
-            //     )
-            // }
-
-
-            // Mengambil dokumen pengguna dari koleksi "users"
-            await query.get()
-                .then(async (parentSnapshot) => {
-                    // Membuat array referensi pengguna
-                    var parentRefs = parentSnapshot.docs.map((parentDoc) => parentDoc.ref);
-
-                    // Menginisialisasi array promise untuk operasi batch read
-                    var batchGetPromises = [];
-
-                    // Membuat operasi batch read untuk setiap referensi pengguna
-                    parentRefs.forEach((parentRef) => {
-                        var media = FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", parentRef);
-                        var batchGetPromise = media.get();
-                        batchGetPromises.push(batchGetPromise);
-                    });
-
-                    // Menjalankan operasi batch read secara bersamaan
-                    return await Promise.all(batchGetPromises).then((batchResults) => {
-                        // Mengolah hasil operasi batch read
-                        batchResults.forEach((mediaSnapshot, index) => {
-                            var parentDoc = parentSnapshot.docs[index];
-                            var medias = []
-                            mediaSnapshot.forEach((mediaDoc) => {
-                                medias.push(mediaDoc.data())
-                            });
-                            list.push(
-                                Model.#instance(parentDoc, medias, this.collection,)
-                            )
-                        });
-                    })
-                        .catch((error) => {
-                            console.error("Error parent & media", error);
-                        });
-                })
-                .catch((error) => {
-                    console.error("Error parent: ", error);
-                });
-
+            const list = await Model.#batchFetch(query)
 
             return list[0] ?? null
         } catch (error) {
             console.log(error)
         }
+    }
+
+     static async #batchFetch(query = FirebaseCore.admin.firestore().collection()) {
+        const list = []
+
+        await query.get()
+            .then(async (parentSnapshot) => {
+                // create array ref parent
+                var parentRefs = parentSnapshot.docs.map((parentDoc) => parentDoc.ref)
+                // init array promise for batch read
+                var batchGetPromises = []
+                // create batch read for every ref parent
+                parentRefs.forEach((parentRef) => {
+                    var media = FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", parentRef)
+                    var batchGetPromise = media.get()
+                    batchGetPromises.push(batchGetPromise);
+                })
+                // run batch read at same time
+                return await Promise.all(batchGetPromises).then((batchResults) => {
+                    batchResults.forEach((mediaSnapshot, index) => {
+                        var parentDoc = parentSnapshot.docs[index];
+                        var medias = []
+                        mediaSnapshot.forEach((mediaDoc) => {
+                            medias.push(mediaDoc.data())
+                        });
+                        list.push(
+                            Model.#instance(parentDoc, medias, this.collection)
+                        )
+                    })
+                })
+                    .catch((error) => {
+                        console.error("Error parent & media", error);
+                    })
+            })
+            .catch((error) => {
+                console.error("Error parent: ", error);
+            })
+        return list
     }
 
     /**
@@ -266,7 +221,7 @@ class Model {
         try {
             const info = instance._info()
             const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id)
-            
+
             // delete all medias
             if (info.medias.length > 0) {
                 const paths = []
