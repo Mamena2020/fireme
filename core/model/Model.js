@@ -13,11 +13,14 @@ const DataTypes = Object.freeze({
 });
 
 const mediaCollection = "medias"
+const roleCollection = "roles"
+const permissionCollection = "permissions"
 
 class Model {
 
     fields = {};
     collection = ""
+    hasRole = false
 
     static init({ fields = {
         Object: {
@@ -26,14 +29,15 @@ class Model {
             allowSearch: false,
             reference: ""
         }
-    }, collection = "" }) {
+    }, collection = "", hasRole = false }) {
 
         this.fields = fields;
         this.collection = collection
+        this.hasRole = hasRole
     }
 
 
-    static #instance(doc, medias, collection) {
+    static #instance(doc, medias = [], roles, collection) {
         return {
             destroy: async function () {
                 return await Model.#destroy(this)
@@ -54,7 +58,8 @@ class Model {
                 return {
                     id: doc.id,
                     collection: collection,
-                    medias: medias
+                    medias: medias,
+                    roles: roles,
                 }
             },
             ...doc.data()
@@ -70,8 +75,8 @@ class Model {
     static async findAll({ where = [], limit = 0 } = {}) {
         var list = []
         try {
-            var query = FirebaseCore.admin.firestore().collection(this.collection)
-
+            const collection = this.collection
+            var query = FirebaseCore.admin.firestore().collection(collection)
             if (where && where.length > 0) {
                 where.forEach(({ field, operator, value, and }) => {
                     var valueLike
@@ -100,7 +105,7 @@ class Model {
             if (typeof limit === "number" && limit > 0) {
                 query = query.limit(limit)
             }
-            list = await Model.#batchFetch(query)
+            list = await Model.#batchFetch(query, collection)
             // const snapshot = await query.get();
             // for (var doc of snapshot.docs) {
             //     var medias = []
@@ -111,7 +116,7 @@ class Model {
             //             }
             //         })
             //     list.push(
-            //         Model.#instance(doc, medias, this.collection, this.hasMedia)
+            //         Model.#instance(doc, medias, collection, this.hasMedia)
             //     )
             // }
 
@@ -128,11 +133,12 @@ class Model {
     * @param { where} : [  { field: 'age', operator: '>=', value: 18, and = true},  { field: 'city', operator: '==', value: "Timika", and = true },]
     * @returns object | null
     */
-    static async findOne({ where = [] }) {
+    static async findOne({ where = [] } = {}) {
 
         try {
-            var query = FirebaseCore.admin.firestore().collection(this.collection)
-            if (where.length > 0) {
+            const collection = this.collection
+            var query = FirebaseCore.admin.firestore().collection(collection)
+            if (where && where.length > 0) {
                 where.forEach(({ field, operator, value, and }) => {
                     if (and == undefined || and == true) {
                         query = query.where(field, operator, value)
@@ -144,7 +150,7 @@ class Model {
             }
             query = query.limit(1)
             // const snapshot = await query.get();
-            const list = await Model.#batchFetch(query)
+            const list = await Model.#batchFetch(query, collection)
 
             return list[0] ?? null
         } catch (error) {
@@ -152,7 +158,7 @@ class Model {
         }
     }
 
-     static async #batchFetch(query = FirebaseCore.admin.firestore().collection()) {
+    static async #batchFetch(query = FirebaseCore.admin.firestore().collection(), collection) {
         const list = []
 
         await query.get()
@@ -162,23 +168,57 @@ class Model {
                 // init array promise for batch read
                 var batchGetPromises = []
                 // create batch read for every ref parent
-                parentRefs.forEach((parentRef) => {
+                parentRefs.forEach((parentRef, index) => {
+                    // media
                     var media = FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", parentRef)
-                    var batchGetPromise = media.get()
-                    batchGetPromises.push(batchGetPromise);
+                    var mediaBatchPromise = media.get()
+                    // role
+                    if (this.hasRole) {
+                        var role = FirebaseCore.admin.firestore().collection(roleCollection).doc(parentSnapshot.docs[index].data()["role"])
+                        var roleBatchPromise = role.get()
+                        batchGetPromises.push(Promise.all([mediaBatchPromise, roleBatchPromise]))
+                    }
+                    else {
+                        batchGetPromises.push(Promise.all([mediaBatchPromise]))
+                    }
                 })
                 // run batch read at same time
                 return await Promise.all(batchGetPromises).then((batchResults) => {
-                    batchResults.forEach((mediaSnapshot, index) => {
-                        var parentDoc = parentSnapshot.docs[index];
-                        var medias = []
-                        mediaSnapshot.forEach((mediaDoc) => {
-                            medias.push(mediaDoc.data())
-                        });
-                        list.push(
-                            Model.#instance(parentDoc, medias, this.collection)
-                        )
-                    })
+
+                    if (this.hasRole) {
+                        console.log("has role")
+                        batchResults.forEach(([mediaSnapshot, roleSnapshot], index) => {
+                            var parentDoc = parentSnapshot.docs[index];
+                            var medias = []
+                            if (mediaSnapshot) {
+                                mediaSnapshot.forEach((mediaDoc) => {
+                                    if (mediaDoc && mediaDoc.id) {
+                                        medias.push(mediaDoc.data())
+                                    }
+                                });
+                            }
+                            list.push(
+                                Model.#instance(parentDoc, medias, roleSnapshot?.data() ?? null, collection)
+                            )
+                        })
+                    }
+                    else {
+                        console.log("has't role")
+                        batchResults.forEach((mediaSnapshot, index) => {
+                            var parentDoc = parentSnapshot.docs[index];
+                            var medias = []
+                            if (mediaSnapshot) {
+                                mediaSnapshot.forEach((mediaDoc) => {
+                                    if (mediaDoc && mediaDoc.id) {
+                                        medias.push(mediaDoc.data())
+                                    }
+                                });
+                            }
+                            list.push(
+                                Model.#instance(parentDoc, medias, null, collection)
+                            )
+                        })
+                    }
                 })
                     .catch((error) => {
                         console.error("Error parent & media", error);
@@ -204,11 +244,46 @@ class Model {
             }
             await docRef.set(dataToStore)
             const snapshot = await docRef.get()
+
             return Model.#instance(snapshot, [], this.collection)
         } catch (error) {
             console.error(error)
         }
         return null
+    }
+
+    /**
+     * 
+     * @param {list} array of object 
+     * @returns object of data
+     */
+    static async bulkStored({ list= [] }) {
+        var status = false
+        try {
+            if(list==undefined) throw 'invalid list'
+
+            const collectionRef = FirebaseCore.admin.firestore().collection(this.collection)
+            var batch = FirebaseCore.admin.firestore().batch();
+            
+            list.forEach((data) => {
+                var docRef = collectionRef.doc()
+                const dataToStore = {
+                    id: docRef.id,
+                    ...data,
+                }
+                batch.set(docRef, dataToStore)
+            })
+            await batch.commit()
+                .then(() => {
+                    status = true
+                })
+                .catch((error) => {
+                    console.error("Error: ", error)
+                })
+        } catch (error) {
+            console.error(error)
+        }
+        return status
     }
 
     /**
@@ -275,6 +350,7 @@ class Model {
             if (!newData) throw 'invalid new data'
 
             const info = instance._info()
+            console.log(info.collection)
             const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id)
             await docRef.update(newData)
                 .then(() => {

@@ -1,14 +1,6 @@
-import Permission from "./../service/RolePermission/Permission.js"
-import Role from "./../service/RolePermission/Role.js"
+import Permission from "../../models/Permission.js"
+import Role from "../../models/Role.js"
 
-// const permissions = [
-//     { name: "user-create" },
-//     { name: "user-stored" },
-//     { name: "user-edit" },
-//     { name: "user-update" },
-//     { name: "user-delete" },
-//     { name: "user-search" }
-// ]
 const permissions = [
     "user-create",
     "user-stored",
@@ -18,10 +10,6 @@ const permissions = [
     "user-search"
 ]
 
-const roles = [
-    { name: "admin", },
-    { name: "customer" }
-]
 
 /**
  * running seeder code in here
@@ -31,30 +19,31 @@ const roles = [
  */
 const Seeder = async () => {
 
-    let alreadySeed = await Permission.findAll()
-
-    if (alreadySeed.length > 0) {
-        console.log("already Seeding")
-        return
+    const existPermission = await Permission.findOne()
+    if (!existPermission) {
+        const permissionData = []
+        permissions.forEach((e) => {
+            permissionData.push({ "name": e })
+        })
+        await Permission.bulkStored({
+            list: permissionData
+        })
     }
 
-    for (let permission of permissions) {
-        console.log(permission)
-        await Permission.create({ name: permission })
-    }
-
-    await Role.bulkCreate(roles)
-
-    let admin = await Role.findOne({ where: { name: "admin" } })
-    if (admin) {
-        await admin.assignPermissions(permissions)
-    }
-
-    let customer = await Role.findOne({ where: { name: "customer" } })
-    if (customer) {
-        await customer.assignPermissions([
-            "user-create", "user-stored",
-        ])
+    const existRole = await Role.findOne()
+    if (!existRole) {
+        await Role.bulkStored({
+            list: [
+                {
+                    "name": "super",
+                    "permissions": []
+                },
+                {
+                    "name": "admin",
+                    "permissions": permissions
+                },
+            ]
+        })
     }
 
 }

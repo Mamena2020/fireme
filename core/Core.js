@@ -5,6 +5,7 @@ import { routeStoragePublic } from "./config/Media.js"
 import api from "../routes/api.js";
 import web from "../routes/web.js";
 import FirebaseCore from "./firebase/FirebaseCore.js";
+import Seeder from "./seeder/Seeder.js";
 
 
 const Load = async (app) => {
@@ -17,7 +18,8 @@ const Load = async (app) => {
             await FirebaseCore.init()
             //------------------------------------------------------- 
 
-            //------------------------------------------------------- Models
+            //------------------------------------------------------- seeder
+            await Seeder()
 
 
             //------------------------------------------------------- 

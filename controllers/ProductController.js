@@ -77,6 +77,8 @@ export default class ProductController {
         })
         if (!product) return res.json({ "message": "not found", })
 
+        console.log(product._info())
+
         const updated = await product.update({
             "name": name,
             "price": price
