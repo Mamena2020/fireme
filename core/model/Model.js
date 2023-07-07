@@ -207,13 +207,15 @@ class Model {
                         batchResults.forEach((mediaSnapshot, index) => {
                             var parentDoc = parentSnapshot.docs[index];
                             var medias = []
-                            if (mediaSnapshot) {
-                                mediaSnapshot.forEach((mediaDoc) => {
-                                    if (mediaDoc && mediaDoc.id) {
-                                        medias.push(mediaDoc.data())
-                                    }
-                                });
-                            }
+                            // console.log(typeof mediaSnapshot)
+                            mediaSnapshot.forEach((mediaDoc) => {
+                                if (mediaDoc && mediaDoc.docs) {
+                                    mediaDoc.docs.forEach((doc) => {
+                                        medias.push(doc.data())
+                                    })
+                                }
+                            })
+
                             list.push(
                                 Model.#instance(parentDoc, medias, null, collection)
                             )
@@ -257,14 +259,14 @@ class Model {
      * @param {list} array of object 
      * @returns object of data
      */
-    static async bulkStored({ list= [] }) {
+    static async bulkStored({ list = [] }) {
         var status = false
         try {
-            if(list==undefined) throw 'invalid list'
+            if (list == undefined) throw 'invalid list'
 
             const collectionRef = FirebaseCore.admin.firestore().collection(this.collection)
             var batch = FirebaseCore.admin.firestore().batch();
-            
+
             list.forEach((data) => {
                 var docRef = collectionRef.doc()
                 const dataToStore = {
