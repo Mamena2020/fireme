@@ -1,6 +1,7 @@
 import express from "express";
 import JwtAuthPass from "../core/middleware/JwtAuthPass.js";
 import ProductController from "../controllers/ProductController.js";
+import RoleController from "../controllers/RoleController.js";
 
 
 
@@ -22,6 +23,7 @@ export default function api(app) {
     routerGuest.post("/product/:id/image", ProductController.addImage)
     routerGuest.delete("/product/:id/image/:name", ProductController.destroyImage)
     
+    routerGuest.get("/role", RoleController.fetch)
     
     app.use("/api", routerGuest)
     // routerGuest.get("/:locale/users", LocalePass, UserController.getUsers)

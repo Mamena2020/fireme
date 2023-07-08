@@ -15,6 +15,7 @@ Product.init({
         },
     },
     collection:"products",
+    hasRole: true
 })
 
 

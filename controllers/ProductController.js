@@ -15,7 +15,8 @@ export default class ProductController {
         res.json({
             "message": "get single data",
             "product": product,
-            "media": product?.getMedia()
+            "media": product?.getMedia(),
+            "role": product?.getRole()
         })
     }
 
@@ -31,7 +32,8 @@ export default class ProductController {
                 "id": e.id,
                 "name": e.name,
                 "price": e.price,
-                "medias": e.getMedia()
+                "medias": e.getMedia(),
+                "role": e.getRole()
             })
         })
 
@@ -53,6 +55,11 @@ export default class ProductController {
         }
 
         const product = await Product.stored({ data: data })
+
+        if(product)
+        {
+           await product.setRole("admin")
+        }
 
         res.json({
             "message": "store product",
