@@ -10,6 +10,21 @@ const DataTypes = Object.freeze({
     "MAP": "MAP",
     "REFERENCE": "REFERENCE",
     "LOCATION": "LOCATION",
+})
+
+const Operator = Object.freeze({
+    "equal": "==",
+    "notEqual": "!=",
+    "lt": "<",
+    "lte": "<=",
+    "gt": ">",
+    "gte": ">=",
+    "arrayContains": "array-contains",
+    "in": "in",
+    "arrayContainsAny": "array-contains-any",
+    "startsWith": "startsWith",
+    "endsWith": "endsWith",
+    "contains": "contains",
 });
 
 const mediaCollection = "medias"
@@ -32,7 +47,6 @@ class Model {
             reference: ""
         }
     }, collection = "", hasRole = false }) {
-
         this.fields = fields;
         this.collection = collection
         this.hasRole = hasRole
@@ -62,10 +76,14 @@ class Model {
             getRole: function () {
                 return Model.#getRole(this)
             },
+            removeRole: async function () {
+                return await Model.#removeRole(this)
+            },
             _info: function () {
                 return {
                     id: doc.id,
                     ref: doc.ref,
+                    doc: doc,
                     collection: collection,
                     medias: medias,
                     role: role,
@@ -95,7 +113,7 @@ class Model {
                     if (and == undefined || and == true) {
                         if (valueLike) {
                             // console.log(valueLike)
-                            query = query.where(field, ">=", value).where(field, "<", valueLike)
+                            query = query.where(field, Operator.gte, value).where(field, Operator.lt, valueLike)
                         }
                         else {
                             query = query.where(field, operator, value)
@@ -103,7 +121,7 @@ class Model {
                     }
                     else {
                         if (valueLike) {
-                            query = query.where(field, ">=", value).where(field, "<", valueLike)
+                            query = query.where(field, Operator.gte, value).where(field, Operator.lt, valueLike)
                         }
                         else {
                             query = query.orWhere(field, operator, value)
@@ -114,22 +132,8 @@ class Model {
             if (typeof limit === "number" && limit > 0) {
                 query = query.limit(limit)
             }
+
             list = await Model.#batchFetch(query, collection, this.hasRole)
-            // const snapshot = await query.get();
-            // for (var doc of snapshot.docs) {
-            //     var medias = []
-            //     FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", doc.ref).get()
-            //         .then((mediaSnapshot) => {
-            //             for (var mediaDoc of mediaSnapshot.docs) {
-            //                 medias.push(mediaDoc.data())
-            //             }
-            //         })
-            //     list.push(
-            //         Model.#instance(doc, medias, collection, this.hasMedia)
-            //     )
-            // }
-
-
 
         } catch (error) {
             console.log(error)
@@ -186,12 +190,12 @@ class Model {
                 // create batch read for every ref parent
                 parentRefs.forEach((parentRef, index) => {
                     // media
-                    var media = FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", parentRef)
+                    var media = FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", Operator.equal, parentRef)
                     var mediaBatchPromise = media.get()
                     // has role
                     if (hasRole) {
                         var hasRoleBatchPromise = FirebaseCore.admin.firestore().collection(hasRoleCollection)
-                            .where("ref", "==", parentRef)
+                            .where("ref", Operator.equal, parentRef)
                             .get()
                         batchGetPromises.push(Promise.all([mediaBatchPromise, hasRoleBatchPromise]))
                     }
@@ -207,6 +211,7 @@ class Model {
                         var roles = []
                         for (var i = 0; i < batchResults.length; i++) {
                             if (i == 0) {
+                                // store roles data
                                 var [roleSnapshot] = batchResults[i]
                                 roleSnapshot.docs.forEach((doc) => {
                                     roles.push({
@@ -344,6 +349,10 @@ class Model {
                     await this.#destroyMedias(docRef)
                 })
             }
+            // delete roles
+            if (info.role) {
+                await this.#removeRole(instance)
+            }
 
             await docRef.delete()
                 .then(async () => {
@@ -364,7 +373,7 @@ class Model {
         var status = false
         try {
             const instance = await this.findOne({
-                where: [{ field: 'id', operator: '==', value: id, }]
+                where: [{ field: 'id', operator: Operator.equal, value: id, }]
             })
             if (!instance) throw 'not found'
             status = await instance.destroy()
@@ -439,8 +448,6 @@ class Model {
 
     static async #saveMedia(instance, file, name = "") {
 
-
-
         if (!file || !file.extension || !name || !instance) {
             console.log("Save media failed: require all params, Please check file or name")
             return
@@ -451,8 +458,8 @@ class Model {
         var docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id);
 
         const oldMediaDoc = await FirebaseCore.admin.firestore().collection(mediaCollection)
-            .where("ref", "==", docRef)
-            .where("name", "==", name)
+            .where("ref", Operator.equal, docRef)
+            .where("name", Operator.equal, name)
             .get()
 
         const media = await FirebaseCore.saveMedia(file)
@@ -465,15 +472,19 @@ class Model {
             "path": media.path,
             "ref": docRef
         }
+        const newMedias = info.medias ?? []
 
         // create new   
         if (oldMediaDoc.empty) {
             const mediaRef = FirebaseCore.admin.firestore().collection(mediaCollection).doc()
-            await mediaRef.set({
-                id: mediaRef.id,
-                ...newData,
-            })
             mediaId = mediaRef.id
+            const dataToStored = {
+                id: mediaId,
+                ...newData,
+            }
+            await mediaRef.set(dataToStored)
+            newMedias.push(dataToStored)
+            Object.assign(instance, this.#instance(info.doc, newMedias, info.role, info.collection))
         }
         else {
             // remove old media
@@ -481,6 +492,17 @@ class Model {
             // update 
             await oldMediaDoc.docs[0].ref.update(newData)
             mediaId = oldMediaDoc.docs[0].ref.id
+
+            info.medias = info.medias.map(_media => {
+                if (_media.name === name) {
+                    return {
+                        id: mediaId,
+                        ...newData,
+                    }
+                }
+                return _media;
+            });
+            Object.assign(instance, this.#instance(info.doc, info.medias, info.role, info.collection))
         }
         return {
             "id": mediaId,
@@ -510,6 +532,7 @@ class Model {
         return medias
     }
 
+
     static async #destroyMedia(instance, name) {
 
         var status = false
@@ -529,6 +552,8 @@ class Model {
                 const docSnapshot = await mediaRef.get();
                 if (docSnapshot.exists) {
                     await mediaRef.delete().then(() => {
+                        const newMedias = info.medias.filter(_media => _media.name !== name)
+                        Object.assign(instance, this.#instance(info.doc, newMedias, info.role, info.collection))
                         status = true
                     });
                 }
@@ -541,11 +566,11 @@ class Model {
 
     static async #destroyMedias(instanceRef) {
         try {
-            await FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", "==", instanceRef).get()
-                .then((querySnapshot) => {
+            await FirebaseCore.admin.firestore().collection(mediaCollection).where("ref", Operator.equal, instanceRef).get()
+                .then((snapshot) => {
                     // collect media doc ref
                     var batch = FirebaseCore.admin.firestore().batch();
-                    querySnapshot.forEach((doc) => {
+                    snapshot.forEach((doc) => {
                         batch.delete(doc.ref)
                     })
                     // run batch 
@@ -566,13 +591,13 @@ class Model {
     static async #setRole(instance, name) {
         var status = false
         try {
-            await FirebaseCore.admin.firestore().collection(roleCollection).where("name", "==", name).get()
+            await FirebaseCore.admin.firestore().collection(roleCollection).where("name", Operator.equal, name).get()
                 .then(async (querySnapshot) => {
                     if (!querySnapshot.empty) {
                         const info = instance._info()
                         const oldHasRoleDoc = await FirebaseCore.admin.firestore().collection(hasRoleCollection)
-                            .where("ref", "==", info.ref)
-                            .where("role_ref", "==", querySnapshot.docs[0].ref)
+                            .where("ref", Operator.equal, info.ref)
+                            .where("role_ref", Operator.equal, querySnapshot.docs[0].ref)
                             .get()
                         const newData = {
                             "ref": info.ref,
@@ -591,6 +616,13 @@ class Model {
                             await oldHasRoleDoc.docs[0].ref.update(newData)
                             mediaId = oldHasRoleDoc.docs[0].ref.id
                         }
+
+                        // update role to instance
+                        const roleData = {
+                            ref: querySnapshot.docs[0].ref,
+                            ...querySnapshot.docs[0].data()
+                        }
+                        Object.assign(instance, this.#instance(info.doc, info.medias, roleData, info.collection))
                         status = true
                     }
                 })
@@ -608,16 +640,49 @@ class Model {
         if (!instance) return null
         const info = instance._info()
         if (!info.role) return null
+
         return {
             "id": info.role.id,
             "name": info.role.name,
             "permissions": info.role.permissions
         }
     }
+    static async #removeRole(instance) {
+        var status = false
+        try {
+            if (!instance) throw 'no instance'
+            const info = instance._info()
+            if (!info.role) throw 'no role'
+
+            await FirebaseCore.admin.firestore().collection(hasRoleCollection)
+                .where("ref", Operator.equal, info.ref)
+                .where("role_ref", Operator.equal, info.role.ref).get()
+                .then((snapshot) => {
+                    // collect media doc ref
+                    var batch = FirebaseCore.admin.firestore().batch();
+                    snapshot.forEach((doc) => {
+                        batch.delete(doc.ref)
+                    })
+                    // run batch 
+                    return batch.commit();
+                })
+                .then(() => {
+                    Object.assign(instance, this.#instance(info.doc, info.medias, null, info.collection))
+                    status = true;
+                })
+                .catch((error) => {
+                    console.error("Error: ", error);
+                });
+        } catch (error) {
+            console.error("Error: ", error);
+        }
+        return status
+
+    }
 
 }
 
 export default Model
 export {
-    DataTypes
+    DataTypes, Operator
 }

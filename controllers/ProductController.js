@@ -1,3 +1,4 @@
+import { Operator } from "../core/model/Model.js";
 import Product from "../models/Product.js";
 
 
@@ -8,7 +9,7 @@ export default class ProductController {
         const name = req.params.name
         const product = await Product.findOne({
             where: [
-                { "field": "name", "operator": "==", "value": name }
+                { "field": "name", "operator": Operator.equal, "value": name }
             ]
         })
 
@@ -56,14 +57,14 @@ export default class ProductController {
 
         const product = await Product.stored({ data: data })
 
-        if(product)
-        {
-           await product.setRole("admin")
+        if (product) {
+            await product.setRole("admin")
         }
 
         res.json({
             "message": "store product",
-            "user": product
+            "user": product,
+            "role": product.getRole()
         })
     }
 
@@ -79,7 +80,7 @@ export default class ProductController {
 
         const product = await Product.findOne({
             where: [
-                { "field": "id", "operator": "==", "value": id }
+                { "field": "id", "operator": Operator.equal, "value": id }
             ]
         })
         if (!product) return res.json({ "message": "not found", })
@@ -101,7 +102,7 @@ export default class ProductController {
                 "price": new_price
             },
             where: [
-                { "field": "price", "operator": "<", "value": old_price }
+                { "field": "price", "operator": Operator.lt, "value": old_price }
             ]
         })
         res.json({ "message": updated ? "updated" : "update failed", })
@@ -113,7 +114,7 @@ export default class ProductController {
         const { image, name } = req.body
 
         const product = await Product.findOne({
-            where: [{ "field": "id", "operator": "==", "value": id }]
+            where: [{ "field": "id", "operator": Operator.equal, "value": id }]
         })
 
         if (!product) return res.json({ "message": "product not found" })
@@ -128,7 +129,7 @@ export default class ProductController {
         const name = req.params.name
 
         const product = await Product.findOne({
-            where: [{ "field": "id", "operator": "==", "value": id }]
+            where: [{ "field": "id", "operator": Operator.equal, "value": id }]
         })
 
         if (!product) return res.json({ "message": "product not found" })

@@ -4,8 +4,8 @@ POST  http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "name": "Robert",
-    "price": 7880
+    "name": "Cindy",
+    "price": 2000
 }
 
 
@@ -13,10 +13,10 @@ Content-Type: application/json
 GET http://localhost:5000/api/product
 
 ### fetch one
-GET http://localhost:5000/api/product/Robert
+GET http://localhost:5000/api/product/Cindy
 
 ### delete
-DELETE http://localhost:5000/api/product/CqveaphkVqUsUQUkzIR9
+DELETE http://localhost:5000/api/product/DwmKmEpgNsXH4w03ZalM
 
 ### update
 PUT   http://localhost:5000/api/product/WE9kGVvBbTcR5fZmuuoL
