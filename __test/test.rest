@@ -4,7 +4,7 @@ POST  http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "name": "Cindy",
+    "name": "Andre Aipassa",
     "price": 2000
 }
 
@@ -13,18 +13,21 @@ Content-Type: application/json
 GET http://localhost:5000/api/product
 
 ### fetch one
-GET http://localhost:5000/api/product/Cindy
+GET http://localhost:5000/api/product/And
+
+### search
+GET http://localhost:5000/api/product/search/Andre
 
 ### delete
-DELETE http://localhost:5000/api/product/DwmKmEpgNsXH4w03ZalM
+DELETE http://localhost:5000/api/product/21000
 
 ### update
-PUT   http://localhost:5000/api/product/WE9kGVvBbTcR5fZmuuoL
+PUT   http://localhost:5000/api/product/Ot3UxjOx7EDVqTxd9tK6
 Content-Type: application/json
 
 {
-    "name": "Robert beding",
-    "price": 5000
+    "name": "Andre Christian Aipassa",
+    "price": 7879
 }
 
 ### update many
@@ -33,10 +36,11 @@ Content-Type: application/json
 
 {
     "new_price": 1000,
-    "old_price": 2000
+    "old_price": 9000
 }
 
-
+### remove role
+DELETE http://localhost:5000/api/product/5fs3hilbpuNxpTddic5F/role
 
 ### fetch role
 GET http://localhost:5000/api/role

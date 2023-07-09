@@ -2,14 +2,15 @@ import FirebaseCore from "../firebase/FirebaseCore.js";
 
 
 const DataTypes = Object.freeze({
-    "STRING": "STRING",
-    "NUMBER": "NUMBER",
-    "BOOLEAN": "BOOLEAN",
-    "DATE": "DATE",
-    "ARRAY": "ARRAY",
-    "MAP": "MAP",
-    "REFERENCE": "REFERENCE",
-    "LOCATION": "LOCATION",
+    "string": "string",
+    "number": "number",
+    "boolean": "boolean",
+    "map": "map",
+    "array": "array",
+    "null": "null",
+    "timestamp": "timestamp",
+    "geopoint": "geopoint",
+    "reference": "reference",
 })
 
 const Operator = Object.freeze({
@@ -21,6 +22,7 @@ const Operator = Object.freeze({
     "gte": ">=",
     "arrayContains": "array-contains",
     "in": "in",
+    "like": "like",
     "arrayContainsAny": "array-contains-any",
     "startsWith": "startsWith",
     "endsWith": "endsWith",
@@ -42,9 +44,7 @@ class Model {
     static init({ fields = {
         Object: {
             type: DataTypes,
-            timeStamp: false,
-            allowSearch: false,
-            reference: ""
+            nullable: false
         }
     }, collection = "", hasRole = false }) {
         this.fields = fields;
@@ -97,23 +97,29 @@ class Model {
      * get list of data
      * @param { where} : [  { field: 'age', operator: '>=', value: 18, and = true},  { field: 'city', operator: '==', value: "Timika", and = true },]
      * @param {limit} : numeric
+     * @param {orderBy} : {"field":"name","sort":"asc"}
      * @returns list || array
      */
-    static async findAll({ where = [], limit = 0 } = {}) {
+    static async findAll({ where = [], limit = 0, orderBy = {} } = {}) {
         var list = []
         try {
             const collection = this.collection
             var query = FirebaseCore.admin.firestore().collection(collection)
+
             if (where && where.length > 0) {
                 where.forEach(({ field, operator, value, and }) => {
                     var valueLike
-                    if (operator.toLowerCase() === "like") {
+                    if (operator == Operator.like) {
                         valueLike = value + '\uf8ff'
                     }
                     if (and == undefined || and == true) {
                         if (valueLike) {
-                            // console.log(valueLike)
-                            query = query.where(field, Operator.gte, value).where(field, Operator.lt, valueLike)
+                            // console.log("field: ", field)
+                            // console.log("Operator.gte: ", Operator.gte)
+                            // console.log("value: ", value)
+                            // console.log("Operator.lt: ", Operator.lt)
+                            // console.log('valueLike: ', valueLike)
+                            query = query.where(field, Operator.gte, value).where(field, Operator.lte, valueLike)
                         }
                         else {
                             query = query.where(field, operator, value)
@@ -121,17 +127,33 @@ class Model {
                     }
                     else {
                         if (valueLike) {
-                            query = query.where(field, Operator.gte, value).where(field, Operator.lt, valueLike)
+                            query = query.where(field, Operator.gte, value).where(field, Operator.lte, valueLike)
                         }
                         else {
                             query = query.orWhere(field, operator, value)
                         }
                     }
+
+
                 })
             }
+
+            if (Object.keys(orderBy).length > 0) {
+                var order = orderBy["field"]
+                if (order == "created_at") {
+                    order = "createTime"
+                }
+                if (order == "updated_at") {
+                    order = "updateTime"
+                }
+                console.log(order)
+                query = query.orderBy(order, orderBy["sort"])
+            }
+
             if (typeof limit === "number" && limit > 0) {
                 query = query.limit(limit)
             }
+
 
             list = await Model.#batchFetch(query, collection, this.hasRole)
 
@@ -143,7 +165,7 @@ class Model {
 
     /**
     * get single data
-    * @param { where} : [  { field: 'age', operator: '>=', value: 18, and = true},  { field: 'city', operator: '==', value: "Timika", and = true },]
+    * @param { where} : [  { field: 'age', operator: Operator.gte, value: 18, and = true},  { field: 'city', operator: Operator.equal, value: "Timika", and = true },]
     * @returns object | null
     */
     static async findOne({ where = [] } = {}) {
@@ -162,7 +184,7 @@ class Model {
                 })
             }
             query = query.limit(1)
-            // const snapshot = await query.get();
+
             const list = await Model.#batchFetch(query, collection, this.hasRole)
 
             return list[0] ?? null
@@ -239,6 +261,7 @@ class Model {
                                         }
                                     }
                                 })
+
                                 list.push(
                                     Model.#instance(parentDoc, medias, hasRoles[0] ?? null, collection)
                                 )
@@ -270,19 +293,48 @@ class Model {
                 console.error("Error parent: ", error);
             })
         return list
+
     }
+
+
+    static #isValidData(data, fields) {
+        const fieldNames = Object.keys(fields);
+
+        for (const fieldName of fieldNames) {
+            const nullable = fields[fieldName].nullable
+            if (!data.hasOwnProperty(fieldName) && !nullable) {
+                throw new Error(`Field '${fieldName}' is missing in the data.`);
+            }
+
+            const fieldType = fields[fieldName].type;
+            const fieldValue = data[fieldName];
+            const dataType = typeof fieldValue;
+            const isValid = isValidFieldType(fieldType, fieldValue)
+            if (!isValid) {
+                if (nullable && fieldValue != undefined || nullable && fieldValue != null) {
+                    throw new Error(`Invalid data type for field '${fieldName}'. Expected '${fieldType}', but got '${dataType}'.`);
+                }
+            }
+        }
+    }
+
 
     /**
      * 
      * @param {data} object of data 
-     * @returns object of data
+     * @returns object of data || null
      */
-    static async stored({ data = {} }) {
+    static async stored(data = {}) {
         try {
+
+            Model.#isValidData(data, this.fields)
             const docRef = FirebaseCore.admin.firestore().collection(this.collection).doc();
+            const timestamp = FirebaseCore.getCurrentTimestamp()
             const dataToStore = {
+                id: docRef.id,
+                created_at: timestamp,
+                updated_at: timestamp,
                 ...data,
-                id: docRef.id
             }
             await docRef.set(dataToStore)
             const snapshot = await docRef.get()
@@ -302,15 +354,21 @@ class Model {
     static async bulkStored({ list = [] }) {
         var status = false
         try {
-            if (list == undefined) throw 'invalid list'
+            if (!list) throw 'invalid list'
+
+            list.forEach((e) => {
+                Model.#isValidData(e, this.fields)
+            })
 
             const collectionRef = FirebaseCore.admin.firestore().collection(this.collection)
             var batch = FirebaseCore.admin.firestore().batch();
-
+            const timestamp = FirebaseCore.getCurrentTimestamp()
             list.forEach((data) => {
                 var docRef = collectionRef.doc()
                 const dataToStore = {
                     id: docRef.id,
+                    created_at: timestamp,
+                    updated_at: timestamp,
                     ...data,
                 }
                 batch.set(docRef, dataToStore)
@@ -366,17 +424,28 @@ class Model {
 
     /**
      * 
-     * @param {*} id 
+     * @param {where} [{field:'name', 'operator':Operator.equal, value:'foo'}] 
      * @returns boolean 
      */
-    static async destroy(id) {
+    static async destroy({ where = [] } = {}) {
         var status = false
         try {
-            const instance = await this.findOne({
-                where: [{ field: 'id', operator: Operator.equal, value: id, }]
+            const instances = await this.findAll({
+                where: where
             })
-            if (!instance) throw 'not found'
-            status = await instance.destroy()
+            if (!instances || instances.length == 0) throw 'not found'
+            console.log("instances l", instances.length)
+            var deletedCount = 0
+            for (var intance of instances) {
+                var deleted = await intance.destroy()
+                if (deleted) {
+                    deletedCount++
+                }
+            }
+            if (deletedCount == instances.length) {
+                status = true
+            }
+
         } catch (error) {
             console.error("error:", error);
         }
@@ -389,13 +458,17 @@ class Model {
      * @param {instance} instance of model  
      * @returns boolean
      */
-    static async #update(instance, newData) {
+    static async #update(instance, data) {
 
         var status = false
         try {
-            if (!newData) throw 'invalid new data'
+            if (!instance) throw 'invalid new data'
             const info = instance._info()
-            // const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id)
+            const timestamp = FirebaseCore.getCurrentTimestamp()
+            const newData = {
+                ...data,
+                updated_at: timestamp
+            }
             await info.ref.update(newData)
                 .then(() => {
                     status = true
@@ -426,9 +499,15 @@ class Model {
             const snapshot = await query.get();
             if (snapshot.empty || !snapshot) return false
 
+            const timestamp = FirebaseCore.getCurrentTimestamp()
+
             var batch = FirebaseCore.admin.firestore().batch();
+
             snapshot.forEach((doc) => {
-                batch.update(doc.ref, fields);
+                batch.update(doc.ref, {
+                    ...fields,
+                    updated_at: timestamp
+                });
             })
 
             await batch.commit()
@@ -681,6 +760,33 @@ class Model {
     }
 
 }
+
+
+function isValidFieldType(fieldType, fieldValue) {
+    switch (fieldType) {
+        case DataTypes.string:
+            return typeof fieldValue === "string";
+        case DataTypes.number:
+            return typeof fieldValue === "number";
+        case DataTypes.boolean:
+            return typeof fieldValue === "boolean";
+        case DataTypes.map:
+            return typeof fieldValue === "object" && !Array.isArray(fieldValue);
+        case DataTypes.array:
+            return Array.isArray(fieldValue);
+        case DataTypes.null:
+            return fieldValue === null;
+        case DataTypes.timestamp:
+            return fieldValue instanceof FirebaseCore.admin.firestore.Timestamp;
+        case DataTypes.geopoint:
+            return fieldValue instanceof FirebaseCore.admin.firestore.GeoPoint;
+        case DataTypes.reference:
+            return fieldValue instanceof FirebaseCore.admin.firestore.DocumentReference;
+        default:
+            return false;
+    }
+}
+
 
 export default Model
 export {

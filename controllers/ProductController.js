@@ -23,6 +23,10 @@ export default class ProductController {
 
     static async fetch(req, res) {
         const products = await Product.findAll({
+            // orderBy: {
+            //     "field": "updated_at",
+            //     "sort": "desc"
+            // }
             // where: [{ field: "name", operator: "like", value: "ona" }]
         })
 
@@ -33,6 +37,8 @@ export default class ProductController {
                 "id": e.id,
                 "name": e.name,
                 "price": e.price,
+                "created_at":e.created_at.toDate(),
+                "updated_at":e.updated_at.toDate(),
                 "medias": e.getMedia(),
                 "role": e.getRole()
             })
@@ -40,6 +46,32 @@ export default class ProductController {
 
         res.json({
             "message": "get products",
+            "products": productResource
+        })
+    }
+    static async search(req, res) {
+
+        const name = req.params.name
+
+        const products = await Product.findAll({
+            where: [{ field: "name", operator: Operator.like, value: name }]
+        })
+
+        const productResource = []
+
+        products.forEach((e) => {
+            productResource.push({
+                // "id": e.id,
+                // "name": e.name,
+                // "price": e.price,
+                ...e,
+                "medias": e.getMedia(),
+                "role": e.getRole()
+            })
+        })
+
+        res.json({
+            "message": "search products",
             "products": productResource
         })
     }
@@ -55,7 +87,9 @@ export default class ProductController {
             "price": price
         }
 
-        const product = await Product.stored({ data: data })
+        const product = await Product.stored(data)
+
+        if (!product) return res.json({ "message": "failed to stored" })
 
         if (product) {
             await product.setRole("admin")
@@ -70,7 +104,11 @@ export default class ProductController {
 
     static async delete(req, res) {
         const id = req.params.id
-        const deleted = await Product.destroy(id)
+        const deleted = await Product.destroy({
+            where: [
+                { "field": "price", "operator": Operator.lt, "value": parseInt(id) }
+            ]
+        })
         res.json({ "message": deleted ? "deleted" : "delete failed", })
     }
     static async update(req, res) {
@@ -84,8 +122,6 @@ export default class ProductController {
             ]
         })
         if (!product) return res.json({ "message": "not found", })
-
-        console.log(product._info())
 
         const updated = await product.update({
             "name": name,
@@ -137,6 +173,21 @@ export default class ProductController {
         const media = await product.destroyMedia(name)
 
         res.json({ "message": media ? "image deleted" : "failed delete" })
+    }
+
+    static async removeRole(req, res) {
+
+        const id = req.params.id
+
+        const product = await Product.findOne({
+            where: [{ "field": "id", "operator": Operator.equal, "value": id }]
+        })
+
+        if (!product) return res.json({ "message": "product not found" })
+
+        const removed = await product.removeRole()
+
+        res.json({ "message": removed ? "role removed" : "failed to remove role" })
     }
 
 }

@@ -15,6 +15,7 @@ export default function api(app) {
     // routerGuest.get("/users", UserController.getUsers)
     
     routerGuest.get("/product", ProductController.fetch)
+    routerGuest.get("/product/search/:name", ProductController.search)
     routerGuest.get("/product/:name", ProductController.getByName)
     routerGuest.post("/product", ProductController.stored)
     routerGuest.delete("/product/:id", ProductController.delete)
@@ -22,6 +23,7 @@ export default function api(app) {
     routerGuest.put("/product", ProductController.updateMany)
     routerGuest.post("/product/:id/image", ProductController.addImage)
     routerGuest.delete("/product/:id/image/:name", ProductController.destroyImage)
+    routerGuest.delete("/product/:id/role", ProductController.removeRole)
     
     routerGuest.get("/role", RoleController.fetch)
     

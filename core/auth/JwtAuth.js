@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import AuthConfig from "../config/Auth.js";
+import { Operator } from "../model/Model.js";
 
 class JwtAuth {
 
@@ -36,7 +37,7 @@ class JwtAuth {
 
             const currentDate = new Date()
             if (decoded.exp * 1000 < currentDate.getTime())
-                return 
+                return
 
             delete decoded.exp
             delete decoded.iat
@@ -62,9 +63,11 @@ class JwtAuth {
                     return reject({ error: "no refresh token" })
                 }
                 var user = await AuthConfig.user.findOne({
-                    where: {
-                        refresh_token: refreshToken
-                    }
+                    where: [{
+                        "field": "refresh_token",
+                        "operator": Operator.equal,
+                        "value": refreshToken
+                    }]
                 })
 
                 if (!user) {

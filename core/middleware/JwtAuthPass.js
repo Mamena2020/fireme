@@ -18,7 +18,7 @@ const JwtAuthPass = async (req, res, next) => {
     if (!token) {
         return res.status(403).json({ message: "unauthorized" })
     }
-    await jwt.verify(token, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, async (err, decoded) => {
+    jwt.verify(token, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, async (err, decoded) => {
 
         if (err) return res.status(403).json({ message: "unauthorized" })
         const currentDate = new Date()
@@ -26,7 +26,7 @@ const JwtAuthPass = async (req, res, next) => {
             return res.status(410).json({ message: "access token expired" })
 
         if (AuthConfig.getUserOnRequest) {
-            req["user"] = await JwtAuth.getUser(req) 
+            req["user"] = await JwtAuth.getUser(req)
         }
 
         next()

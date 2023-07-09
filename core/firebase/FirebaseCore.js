@@ -17,23 +17,23 @@ class FirebaseCore {
 
         // already init return instance of admin
         if (this.admin.apps.length)
-             return this.admin
+            return this.admin
 
-            await new Promise(async (resolve, reject) => {
-                try {
-                    const jsonString = await Buffer.from(firebaseConfig.ServiceAccountBase64, 'base64').toString('ascii')
-                    const jsonData = await JSON.parse(jsonString)
+        await new Promise(async (resolve, reject) => {
+            try {
+                const jsonString = await Buffer.from(firebaseConfig.ServiceAccountBase64, 'base64').toString('ascii')
+                const jsonData = await JSON.parse(jsonString)
 
-                    this.admin.initializeApp({
-                        credential: this.admin.credential.cert(jsonData),
-                        storageBucket: firebaseConfig.firebaseBucket
-                    });
-                    resolve(this.admin)
-                } catch (error) {
-                    console.log(error)
-                    reject()
-                }
-            })
+                this.admin.initializeApp({
+                    credential: this.admin.credential.cert(jsonData),
+                    storageBucket: firebaseConfig.firebaseBucket
+                });
+                resolve(this.admin)
+            } catch (error) {
+                console.log(error)
+                reject()
+            }
+        })
     }
 
 
@@ -168,6 +168,11 @@ class FirebaseCore {
         }
 
 
+    }
+
+    static getCurrentTimestamp() {
+        this.init()
+        return this.admin.firestore.FieldValue.serverTimestamp();
     }
 
 }

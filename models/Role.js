@@ -7,14 +7,15 @@ class Role extends Model {
 Role.init({
     fields: {
         name: {
-            type: DataTypes.STRING
+            type: DataTypes.string
         },
         permissions: {
-            type: DataTypes.ARRAY
+            type: DataTypes.array
         },
     },
-    collection:"roles",
+    collection: "roles",
 })
 
 
 export default Role
+

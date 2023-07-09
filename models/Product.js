@@ -7,11 +7,10 @@ class Product extends Model {
 Product.init({
     fields: {
         name: {
-            allowSearch: true,
-            type: DataTypes.STRING
+            type: DataTypes.string
         },
         price: {
-            type: DataTypes.NUMBER
+            type: DataTypes.number
         },
     },
     collection:"products",

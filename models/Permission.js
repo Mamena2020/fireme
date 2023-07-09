@@ -7,7 +7,7 @@ class Permission extends Model {
 Permission.init({
     fields: {
         name: {
-            type: DataTypes.STRING
+            type: DataTypes.string
         },
     },
     collection: "permissions",
