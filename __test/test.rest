@@ -15,18 +15,18 @@ GET http://localhost:5000/api/product
 GET http://localhost:5000/api/product/And
 
 ### search
-GET http://localhost:5000/api/product/search/And
+GET http://localhost:5000/api/product/search/Chr
 
 ### delete
-DELETE http://localhost:5000/api/product/NdHmWMnglOk08hbzEErB
+DELETE http://localhost:5000/api/product/Ot3UxjOx7EDVqTxd9tK6
 
 ### update
 PUT   http://localhost:5000/api/product/Ot3UxjOx7EDVqTxd9tK6
 Content-Type: application/json
 
 {
-    "name": "Chris",
-    "price": 5000
+    "name": "Chris a",
+    "price": 50200
 }
 
 ### update many
@@ -35,11 +35,11 @@ Content-Type: application/json
 
 {
     "new_price": 8000,
-    "old_price": 9000
+    "old_price": 92000
 }
 
 ### remove role
-DELETE http://localhost:5000/api/product/5fs3hilbpuNxpTddic5F/role
+DELETE http://localhost:5000/api/product/pAJJOpM1MLh6LMF5UZcZ/role
 
 ### fetch role
 GET http://localhost:5000/api/role

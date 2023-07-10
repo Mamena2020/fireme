@@ -20,7 +20,7 @@
         "no-console": [
             "error", 
              { 
-             "allow": ["warn", "error","info"]
+               "allow": ["warn", "error","info"]
              }
         ],
         "no-use-before-define": ["error", {
@@ -29,5 +29,7 @@
             "variables": true,
             "allowNamedExports": false
         }]
+        ,
+        "no-await-in-loop":"off"
     }
 }

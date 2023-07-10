@@ -1,44 +1,49 @@
-import db from "../database/Database.js"
+import FirebaseCore from '../firebase/FirebaseCore.js';
 
 class ValidationDB {
-
-
-    static async exists(tableName, column, field, exception) {
-        let result = await db.query(`SELECT ${column} FROM ${tableName} WHERE ${column} = :field AND id != :exception  limit 1`, {
-            replacements: {
-                field: field,
-                exception: exception ?? -1
+    static async #checkExists(collection, field, data, exception) {
+        // exists return true
+        let status = false;
+        let query = FirebaseCore.admin.firestore().collection(collection).where(field, '==', data);
+        if (exception) {
+            query = query.where('id', '!=', exception);
+        }
+        await query.get().then((snapshoot) => {
+            if (snapshoot.docs.length > 0) {
+                status = true;
+                console.info('status', status);
             }
-        }).then((e) => {
-            // console.log("exist", e)
-            if (e[0].length == 0) return false
-            return true
-        }).catch((e) => {
-            // console.log("error exists", e)
-            return false
-        })
-        return result
-    }
-    static async unique(tableName, column, field, exception) {
-        let result = await db.query(`SELECT ${column} FROM ${tableName} WHERE ${column} = :field AND id != :exception limit 1`, {
-            replacements: {
-                field: field,
-                exception: exception ?? -1
-            }
-        }).then((e) => {
-            // console.log("unique", e)
-            if (e[0].length == 0) return true
-            return false
-        }).catch((e) => {
-            // console.log("error unique", e)
-            return false
-        })
-        return result
+        }).catch((error) => {
+            console.error(error);
+        });
+        return status;
     }
 
+    /**
+     * check if data is exists in db
+     * @param {*} collection collection name
+     * @param {*} field fields
+     * @param {*} data data to check
+     * @param {*} exception exception data id
+     * @returns boolean
+     */
+    static async exists(collection, field, data, exception) {
+        const result = await this.#checkExists(collection, field, data, exception);
+        return result;
+    }
 
+    /**
+     * check if data is unique and never exists in db
+     * @param {*} collection collection name
+     * @param {*} field fields
+     * @param {*} data data to check
+     * @param {*} exception exception data id
+     * @returns boolean
+     */
+    static async unique(collection, field, data, exception) {
+        const result = await this.#checkExists(collection, field, data, exception);
+        return !result;
+    }
 }
 
-export default ValidationDB
-
-
+export default ValidationDB;

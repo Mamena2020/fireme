@@ -1,5 +1,6 @@
 import { Operator } from '../core/model/Model.js';
 import Product from '../models/Product.js';
+import ProductRequest from '../requests/ProductRequest.js';
 
 export default class ProductController {
     static async getByName(req, res) {
@@ -75,6 +76,13 @@ export default class ProductController {
 
     static async stored(req, res) {
         const { name, price } = req.body;
+
+        const request = new ProductRequest(req);
+        await request.check();
+        if (request.isError) {
+            return request.responseError(res);
+        }
+
         if (!name || !price) { return res.status(422).json({ message: 'name and price required' }); }
 
         const data = {
