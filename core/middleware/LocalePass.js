@@ -1,23 +1,19 @@
-import Locale from "../locale/Locale.js"
-
-
+import Locale from '../locale/Locale.js';
 
 const LocalePass = async (req, res, next) => {
-
     const prefixs = req.originalUrl.split('/'); // prefixs=> [ '', 'api', 'id','endpoint' ]
-    let locale = ''
+    let locale = '';
     if (prefixs[1] === 'api') {
         locale = prefixs[2] || '';
     } else {
-        locale = prefixs[1] || ''
+        locale = prefixs[1] || '';
     }
-    
     if (!Locale.isLocale(locale)) {
-        return res.status(400).json({ "message": "Required valid locale code. Example: https://abc.com/api/en/endpoint or https://abc.com/en/endpoint" })
+        return res.status(400).json({ message: 'Required valid locale code. Example: https://abc.com/api/en/endpoint or https://abc.com/en/endpoint' });
     }
 
-    req["locale"] = locale
-    next()
-}
+    req.locale = locale;
+    return next();
+};
 
-export default LocalePass
+export default LocalePass;

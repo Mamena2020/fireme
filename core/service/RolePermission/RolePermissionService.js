@@ -1,36 +1,30 @@
-
 /**
  * Checking user that has particular permissions
  * @param {*} user user instance
  * @param {*} permissions ["product-access","product-stored"]
- * @returns 
+ * @returns boolean
  */
-const gateAccess = function (user, permissions = []) {
-
+const gateAccess = (user, permissions = []) => {
     try {
-        if (!Array.isArray(permissions))
-            throw "permissions must be an array"
+        if (!Array.isArray(permissions)) throw Error('permissions must be an array');
 
-        const role = user.getRole()
-        if (!role) throw "user does't have role"
+        const role = user.getRole();
+        if (!role) throw Error("user does't have role");
 
-        const permissionNames = role.permissions
+        const permissionNames = role.permissions;
 
-        if (!permissions)
-            return false
-        let countValid = 0
-        for (let permission of permissionNames) {
+        if (!permissions) return false;
+        let countValid = 0;
+        permissionNames.forEach((permission) => {
             if (permissions.includes(permission)) {
-                countValid++
+                countValid += 1;
             }
-        }
-        if (countValid === permissions.length)
-            return true
-
+        });
+        if (countValid === permissions.length) return true;
     } catch (error) {
-        console.error("Error: ", error)
+        console.error('Error: ', error);
     }
-    return false
-}
+    return false;
+};
 
-export default gateAccess
+export default gateAccess;

@@ -1,4 +1,4 @@
-import Model, { DataTypes } from "../core/model/Model.js";
+import Model, { DataTypes } from '../core/model/Model.js';
 
 class Role extends Model {
 
@@ -7,15 +7,13 @@ class Role extends Model {
 Role.init({
     fields: {
         name: {
-            type: DataTypes.string
+            type: DataTypes.string,
         },
         permissions: {
-            type: DataTypes.array
+            type: DataTypes.array,
         },
     },
-    collection: "roles",
-})
+    collection: 'roles',
+});
 
-
-export default Role
-
+export default Role;

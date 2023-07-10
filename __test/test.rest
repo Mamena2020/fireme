@@ -15,7 +15,7 @@ GET http://localhost:5000/api/product
 GET http://localhost:5000/api/product/And
 
 ### search
-GET http://localhost:5000/api/product/search/Andre
+GET http://localhost:5000/api/product/search/And
 
 ### delete
 DELETE http://localhost:5000/api/product/NdHmWMnglOk08hbzEErB

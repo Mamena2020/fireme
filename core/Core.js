@@ -1,50 +1,38 @@
+import express from 'express';
+import defaultMiddleware from './middleware/Middleware.js';
+import { routeStoragePublic } from './config/Media.js';
+import api from '../routes/api.js';
+import web from '../routes/web.js';
+import FirebaseCore from './firebase/FirebaseCore.js';
+import Seeder from './seeder/Seeder.js';
 
-import express from "express";
-import defaultMiddleware from "./middleware/Middleware.js"
-import { routeStoragePublic } from "./config/Media.js"
-import api from "../routes/api.js";
-import web from "../routes/web.js";
-import FirebaseCore from "./firebase/FirebaseCore.js";
-import Seeder from "./seeder/Seeder.js";
+// eslint-disable-next-line no-async-promise-executor
+const Load = (app) => new Promise(async (resolve, reject) => {
+    try {
+        console.info('load core....');
+        // ------------------------------------------------------- firebase core
+        await FirebaseCore.init();
+        // ------------------------------------------------------- seeder
+        await Seeder();
 
+        // ------------------------------------------------------- Middleware
 
-const Load = async (app) => {
-    return await new Promise(async (resolve, reject) => {
-        try {
+        defaultMiddleware(app);
 
-            console.log("load core....")
+        // ------------------------------------------------------- Routers
 
-            //------------------------------------------------------- firebase core
-            
-            await FirebaseCore.init()
-                        
-            //------------------------------------------------------- seeder
-            
-            await Seeder()
+        app.use(express.static('public'));
 
-            //------------------------------------------------------- Middleware
+        routeStoragePublic(app);
 
-            defaultMiddleware(app)
+        api(app);
+        web(app);
 
-            //------------------------------------------------------- Routers
-
-            app.use(express.static("public"));
-
-            routeStoragePublic(app)
-
-            api(app)
-            web(app)
-
-            //------------------------------------------------------- 
-            return resolve("Ready")
-
-        } catch (error) {
-            return reject(error)
-        }
-
+        // -------------------------------------------------------
+        resolve('Ready');
+    } catch (error) {
+        reject(error);
     }
+});
 
-    )
-}
-
-export default Load
+export default Load;

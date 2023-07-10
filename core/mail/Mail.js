@@ -1,51 +1,50 @@
-import mailConfig from "../config/Mail.js";
-import nodemailer from "nodemailer"
-import ejs from "ejs"
+import nodemailer from 'nodemailer';
+import ejs from 'ejs';
+import mailConfig from '../config/Mail.js';
 
 /**
  * Store testing account
  */
-var testingAccount
+let testingAccount;
 const mailAccount = async () => {
     if (mailConfig.testing) {
         if (!testingAccount) {
-            testingAccount = await nodemailer.createTestAccount()
+            testingAccount = await nodemailer.createTestAccount();
         }
         return {
-            user: testingAccount.user,// generated ethereal user
-            pass: testingAccount.pass // generated ethereal password
-        }
+            user: testingAccount.user, // generated ethereal user
+            pass: testingAccount.pass, // generated ethereal password
+        };
     }
     return {
         user: mailConfig.username,
-        pass: mailConfig.password
-    }
-}
+        pass: mailConfig.password,
+    };
+};
 
 /**
  * create transporter for email
- * @returns 
+ * @returns
  */
 const transporter = async () => {
-    const mailAuth = await mailAccount()
+    const mailAuth = await mailAccount();
     if (!mailAuth.user || !mailAuth.pass) {
-        console.log("\x1b[31m", 'Mail credential invalid, Check your credential mail username or password', "\x1b[0m");
-        throw 'Credential invalid'
+        console.error('\x1b[31m', 'Mail credential invalid, Check your credential mail username or password', '\x1b[0m');
+        throw Error('Credential invalid');
     }
     const transport = {
-        host: mailConfig.host || "smtp.ethereal.email",
+        host: mailConfig.host || 'smtp.ethereal.email',
         port: mailConfig.port || 587,
-        secure: mailConfig.port == 465 ? true : false, // true for 465, false for other ports
-        auth: mailAuth
-    }
+        secure: mailConfig.port === 465, // true for 465, false for other ports
+        auth: mailAuth,
+    };
     return nodemailer.createTransport(transport);
-}
+};
 
 class Mail {
-
     /**
      * Load message options
-     * @param {*} param0 
+     * @param {*} param0
      */
     async load({
         // ------------------- common fields
@@ -55,7 +54,7 @@ class Mail {
         text = '',
         html = {
             path: '',
-            data: {}
+            data: {},
         },
         attachments = [],
         cc = [],
@@ -65,153 +64,144 @@ class Mail {
         replyTo = [],
         alternatives = [],
         encoding = '',
-        // ------------------- 
-    }
-    ) {
-        if (!from)
-            throw 'from email address is required'
-        if (!Array.isArray(to) || to.length === 0)
-            throw 'receivers is required and must be an array'
-        if (!Array.isArray(attachments))
-            throw 'attachments must be an array of object, see doc: https://nodemailer.com/message/attachments'
-        if (!Array.isArray(cc) || !Array.isArray(bcc))
-            throw 'cc & bcc must be an array email'
-        if (!Array.isArray(alternatives))
-            throw 'alternatives must be an array of object, see doc: https://nodemailer.com/message/alternatives'
-        if (!Array.isArray(replyTo))
-            throw 'replyTo must be an array of string'
+        // -------------------
+    }) {
+        if (!from) { throw Error('from email address is required'); }
+        if (!Array.isArray(to) || to.length === 0) { throw Error('receivers is required and must be an array'); }
+        if (!Array.isArray(attachments)) { throw Error('attachments must be an array of object, see doc: https://nodemailer.com/message/attachments'); }
+        if (!Array.isArray(cc) || !Array.isArray(bcc)) { throw Error('cc & bcc must be an array email'); }
+        if (!Array.isArray(alternatives)) { throw Error('alternatives must be an array of object, see doc: https://nodemailer.com/message/alternatives'); }
+        if (!Array.isArray(replyTo)) { throw Error('replyTo must be an array of string'); }
 
         // ------------------- common fields
-        this.from = from
-        this.to = to
-        this.subject = subject
-        this.text = text
-        this.attachments = attachments
-        this.cc = cc
-        this.bcc = bcc
+        this.from = from;
+        this.to = to;
+        this.subject = subject;
+        this.text = text;
+        this.attachments = attachments;
+        this.cc = cc;
+        this.bcc = bcc;
 
         if (html && html.path) {
-            this.html = await this.#renderHtml({ path: html.path.toString(), data: html.data })
+            // this.html = await this. #renderHtml({ path: html.path.toString(), data: html.data });
+            this.html = await this.#renderHtml({ path: html.path.toString(), data: html.data });
         }
         // ------------------- advance fields
-        this.sender = sender
-        this.replyTo = replyTo
-        this.encoding = encoding
-        this.alternatives = alternatives
+        this.sender = sender;
+        this.replyTo = replyTo;
+        this.encoding = encoding;
+        this.alternatives = alternatives;
     }
-
 
     /**
      * rendering html to string with data if exist
-     * @param {*} {path and data} 
+     * @param {*} {path and data}
      * @returns html string
      */
+    // eslint-disable-next-line class-methods-use-this
     async #renderHtml({ path = String, data }) {
-        return await new Promise(async (resolve, reject) => {
-            await ejs.renderFile(path, data || {}, (err, html) => {
+        return new Promise((resolve, reject) => {
+            ejs.renderFile(path, data || {}, (err, html) => {
                 if (err) {
-                    console.log("\x1b[31m", 'Error render html', err, "\x1b[0m");
-                    reject(err)
+                    console.error('\x1b[31m', 'Error render html', err, '\x1b[0m');
+                    reject(err);
                 }
-                resolve(html)
+                resolve(html);
             });
-        })
+        });
     }
-
 
     /**
      * preparing message options
-     * @returns 
+     * @returns
      */
     #messageOptions() {
         // ------------------- common fields
-        let message = {}
+        const message = {};
 
         if (this.from) {
-            message["from"] = this.from
+            message.from = this.from;
         }
         if (this.to) {
-            let _to = ''
+            let toTemp = '';
             this.to.forEach((e, i) => {
                 if (i > 0) {
-                    _to = _to + ", " + e
+                    toTemp = `${toTemp}, ${e}`;
                 } else {
-                    _to = _to + e
+                    toTemp += e;
                 }
-            })
-            message["to"] = _to
+            });
+            message.to = toTemp;
         }
         if (this.subject) {
-            message["subject"] = this.subject
+            message.subject = this.subject;
         }
         if (this.text) {
-            message["text"] = this.text
+            message.text = this.text;
         }
         if (this.attachments) {
-            message["attachments"] = this.attachments
+            message.attachments = this.attachments;
         }
         if (this.html) {
-            message["html"] = this.html
+            message.html = this.html;
         }
 
         if (this.cc) {
-            let _cc = ''
+            let ccTemp = '';
             this.cc.forEach((e, i) => {
                 if (i > 0) {
-                    _cc = _cc + ", " + e
+                    ccTemp = `${ccTemp}, ${e}`;
                 } else {
-                    _cc = _cc + e
+                    ccTemp += e;
                 }
-            })
-            message['cc'] = _cc
+            });
+            message.cc = ccTemp;
         }
 
         if (this.bcc) {
-            let _bcc = ''
+            let bccTemp = '';
             this.bcc.forEach((e, i) => {
                 if (i > 0) {
-                    _bcc = _bcc + ", " + e
+                    bccTemp = `${bccTemp}, ${e}`;
                 } else {
-                    _bcc = _bcc + e
+                    bccTemp += e;
                 }
-            })
-            message['bcc'] = _bcc
+            });
+            message.bcc = bccTemp;
         }
         // ------------------- advance fields
         if (this.sender) {
-            message['sender'] = this.sender
+            message.sender = this.sender;
         }
         if (this.replyTo) {
-            let _replyTo = ''
+            let replyToTemp = '';
             this.replyTo.forEach((e, i) => {
                 if (i > 0) {
-                    _replyTo = _replyTo + ", " + e
+                    replyToTemp = `${replyToTemp}, ${e}`;
                 } else {
-                    _replyTo = _replyTo + e
+                    replyToTemp += e;
                 }
-            })
-            message['replyTo'] = _replyTo
+            });
+            message.replyTo = replyToTemp;
         }
         if (this.encoding) {
-            message['encoding'] = this.encoding
+            message.encoding = this.encoding;
         }
         if (this.alternatives) {
-            message['alternatives'] = this.alternatives
+            message.alternatives = this.alternatives;
         }
 
-        return message
+        return message;
     }
 
     /**
      * sending mail
-     * @returns 
+     * @returns
      */
     async send() {
-        const _transporter = await transporter()
-        return await _transporter.sendMail(this.#messageOptions())
+        const newTransporter = await transporter();
+        return newTransporter.sendMail(this.#messageOptions());
     }
-
 }
 
-export default Mail
-
+export default Mail;

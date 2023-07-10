@@ -1,9 +1,6 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from 'dotenv';
 
-
-
-
+dotenv.config();
 
 /**
  * Mail config
@@ -17,6 +14,6 @@ const mailConfig = {
     name: process.env.MAIL_FROM_NAME,
     testing: false,
 
-}
+};
 
-export default mailConfig
+export default mailConfig;

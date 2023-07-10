@@ -1,4 +1,4 @@
-import Model, { DataTypes } from "../core/model/Model.js";
+import Model, { DataTypes } from '../core/model/Model.js';
 
 class Product extends Model {
 
@@ -7,15 +7,14 @@ class Product extends Model {
 Product.init({
     fields: {
         name: {
-            type: DataTypes.string
+            type: DataTypes.string,
         },
         price: {
-            type: DataTypes.number
+            type: DataTypes.number,
         },
     },
-    collection:"products",
-    hasRole: true
-})
+    collection: 'products',
+    hasRole: true,
+});
 
-
-export default Product
+export default Product;

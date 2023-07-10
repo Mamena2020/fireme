@@ -1,88 +1,83 @@
-import jwt from "jsonwebtoken";
-import AuthConfig from "../config/Auth.js";
-import { Operator } from "../model/Model.js";
+/* eslint-disable no-param-reassign */
+import jwt from 'jsonwebtoken';
+import AuthConfig from '../config/Auth.js';
+import { Operator } from '../model/Model.js';
 
 class JwtAuth {
-
-
-
     /**
      * Create access token & refresh token by using payload
-     * @param {*} payload 
-     * @returns 
+     * @param {*} payload
+     * @returns
      */
 
     static createToken(payload) {
-        let accessToken = jwt.sign(payload, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, {
-            expiresIn: process.env.AUTH_JWT_ACCESS_TOKEN_EXPIRED
-        })
-        let refreshToken = jwt.sign(payload, process.env.AUTH_JWT_REFRESH_TOKEN_SECRET, {
-            expiresIn: process.env.AUTH_JWT_REFRESH_TOKEN_EXPIRED
-        })
+        const accessToken = jwt.sign(payload, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, {
+            expiresIn: process.env.AUTH_JWT_ACCESS_TOKEN_EXPIRED,
+        });
+        const refreshToken = jwt.sign(payload, process.env.AUTH_JWT_REFRESH_TOKEN_SECRET, {
+            expiresIn: process.env.AUTH_JWT_REFRESH_TOKEN_EXPIRED,
+        });
         return {
             accessToken,
-            refreshToken
-        }
+            refreshToken,
+        };
     }
 
     /**
      * generate access token using refresh token
-     * @param {*} refreshToken 
-     * @returns 
+     * @param {*} refreshToken
+     * @returns
      */
 
     static regenerateAccessToken(refreshToken) {
-        return jwt.verify(refreshToken, process.env.AUTH_JWT_REFRESH_TOKEN_SECRET, (err, decoded) => {
-            if (err) return
+        return jwt.verify(
+            refreshToken,
+            process.env.AUTH_JWT_REFRESH_TOKEN_SECRET,
+            (err, decoded) => {
+                if (err) return null;
 
-            const currentDate = new Date()
-            if (decoded.exp * 1000 < currentDate.getTime())
-                return
+                const currentDate = new Date();
+                if (decoded.exp * 1000 < currentDate.getTime()) { return null; }
 
-            delete decoded.exp
-            delete decoded.iat
+                delete decoded.exp;
+                delete decoded.iat;
 
-            const accessToken = jwt.sign(decoded, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, {
-                expiresIn: process.env.AUTH_JWT_ACCESS_TOKEN_EXPIRED
-            })
-            return accessToken
-        })
+                const accessToken = jwt.sign(decoded, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, {
+                    expiresIn: process.env.AUTH_JWT_ACCESS_TOKEN_EXPIRED,
+                });
+                return accessToken;
+            },
+        );
     }
-
 
     /**
      * Get user object using refresh token from cookies
-     * @param {*} req request 
-     * @returns 
+     * @param {*} req request
+     * @returns
      */
     static async getUser(req) {
         try {
-            return await new Promise(async (resolve, reject) => {
-                const refreshToken = req.cookies.refreshToken;
-                if (!refreshToken) {
-                    return reject({ error: "no refresh token" })
-                }
-                var user = await AuthConfig.user.findOne({
-                    where: [{
-                        "field": "refresh_token",
-                        "operator": Operator.equal,
-                        "value": refreshToken
-                    }]
-                })
+            const { refreshToken } = req.cookies;
+            if (!refreshToken) {
+                throw Error('no refresh token');
+            }
+            const user = await AuthConfig.user.findOne({
+                where: [{
+                    field: 'refresh_token',
+                    operator: Operator.equal,
+                    value: refreshToken,
+                }],
+            });
 
-                if (!user) {
-                    console.log("auth user failed1")
-                    return reject({ error: "auth user failed" })
-                }
-                return resolve(user)
-            })
-
+            if (!user) {
+                throw Error('auth user failed');
+            }
+            return user;
         } catch (error) {
-            console.log(error)
-            return null
+            console.error(error);
         }
+        return null;
     }
-
 }
 
-export default JwtAuth
+export default JwtAuth;

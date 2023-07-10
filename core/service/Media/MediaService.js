@@ -1,4 +1,3 @@
-class MediaService{
-    
-}
+export default class MediaService {
 
+}

@@ -1,10 +1,8 @@
-import Role from "../models/Role.js"
-
+import Role from '../models/Role.js';
 
 export default class RoleController {
-
     static async fetch(req, res) {
-        const roles = await Role.findAll()
+        const roles = await Role.findAll();
         // const productResource = []
         // products.forEach((e) => {
         //     productResource.push({
@@ -16,8 +14,8 @@ export default class RoleController {
         // })
 
         res.json({
-            "message": "get roles",
-            "roles": roles
-        })
+            message: 'get roles',
+            roles,
+        });
     }
 }

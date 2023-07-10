@@ -1,21 +1,15 @@
-import User from "../../models/User.js"
+import User from '../../models/User.js';
 
-
-
-const getUserOnRequest = process.env.AUTH_GET_CURRENT_USER_ON_REQUEST ?? false
-
+const getUserOnRequest = process.env.AUTH_GET_CURRENT_USER_ON_REQUEST ?? false;
 
 class AuthConfig {
-
     /**
      * Default user model for auth
-     * @returns 
+     * @returns
      */
-    static user = User
+    static user = User;
 
-
-    static getUserOnRequest = getUserOnRequest
-
+    static getUserOnRequest = getUserOnRequest;
 }
 
-export default AuthConfig
+export default AuthConfig;
