@@ -53,7 +53,7 @@ class Model {
     }
 
 
-    static #instance(doc, medias = [], role, collection) {
+    static #instance(doc, medias = [], role, collection, fields) {
         return {
             destroy: async function () {
                 return await Model.#destroy(this)
@@ -85,6 +85,7 @@ class Model {
                     ref: doc.ref,
                     doc: doc,
                     collection: collection,
+                    fields: fields,
                     medias: medias,
                     role: role,
                 }
@@ -155,7 +156,7 @@ class Model {
             }
 
 
-            list = await Model.#batchFetch(query, collection, this.hasRole)
+            list = await Model.#batchFetch(query, collection, this.fields, this.hasRole)
 
         } catch (error) {
             console.log(error)
@@ -185,7 +186,7 @@ class Model {
             }
             query = query.limit(1)
 
-            const list = await Model.#batchFetch(query, collection, this.hasRole)
+            const list = await Model.#batchFetch(query, collection, this.fields, this.hasRole)
 
             return list[0] ?? null
         } catch (error) {
@@ -193,7 +194,7 @@ class Model {
         }
     }
 
-    static async #batchFetch(query = FirebaseCore.admin.firestore().collection(), collection, hasRole) {
+    static async #batchFetch(query = FirebaseCore.admin.firestore().collection(), collection, fields, hasRole) {
         const list = []
 
         await query.get()
@@ -263,7 +264,7 @@ class Model {
                                 })
 
                                 list.push(
-                                    Model.#instance(parentDoc, medias, hasRoles[0] ?? null, collection)
+                                    Model.#instance(parentDoc, medias, hasRoles[0] ?? null, collection, fields)
                                 )
                             }
                         }
@@ -280,7 +281,7 @@ class Model {
                             })
 
                             list.push(
-                                Model.#instance(parentDoc, medias, null, collection)
+                                Model.#instance(parentDoc, medias, null, collection, fields)
                             )
                         })
                     }
@@ -297,22 +298,24 @@ class Model {
     }
 
 
-    static #isValidData(data, fields) {
-        const fieldNames = Object.keys(fields);
-
+    static #isValidData(data, fields, isUpdate = false) {
+        
+        // if is update then ignore empty fields to using data keys for checking,
+        // if stored then using fields keys for checking
+        const fieldNames = isUpdate ? Object.keys(data) : Object.keys(fields)
+        
         for (const fieldName of fieldNames) {
             const nullable = fields[fieldName].nullable
-            if (!data.hasOwnProperty(fieldName) && !nullable) {
-                throw new Error(`Field '${fieldName}' is missing in the data.`);
+            if (!data.hasOwnProperty(fieldName) && !nullable ) {
+                throw new Error(`Field '${fieldName}' is missing in the data.`)
             }
-
-            const fieldType = fields[fieldName].type;
-            const fieldValue = data[fieldName];
-            const dataType = typeof fieldValue;
+            const fieldType = fields[fieldName].type
+            const fieldValue = data[fieldName]
+            const dataType = typeof fieldValue
             const isValid = isValidFieldType(fieldType, fieldValue)
             if (!isValid) {
                 if (nullable && fieldValue != undefined || nullable && fieldValue != null) {
-                    throw new Error(`Invalid data type for field '${fieldName}'. Expected '${fieldType}', but got '${dataType}'.`);
+                    throw new Error(`Invalid data type for field '${fieldName}'. Expected '${fieldType}', but got '${dataType}'.`)
                 }
             }
         }
@@ -339,7 +342,7 @@ class Model {
             await docRef.set(dataToStore)
             const snapshot = await docRef.get()
 
-            return Model.#instance(snapshot, [], this.collection)
+            return Model.#instance(snapshot, [], null, this.collection, this.fields)
         } catch (error) {
             console.error(error)
         }
@@ -434,7 +437,6 @@ class Model {
                 where: where
             })
             if (!instances || instances.length == 0) throw 'not found'
-            console.log("instances l", instances.length)
             var deletedCount = 0
             for (var intance of instances) {
                 var deleted = await intance.destroy()
@@ -463,7 +465,11 @@ class Model {
         var status = false
         try {
             if (!instance) throw 'invalid new data'
+
             const info = instance._info()
+
+            Model.#isValidData(data, info.fields, true)
+
             const timestamp = FirebaseCore.getCurrentTimestamp()
             const newData = {
                 ...data,
@@ -480,10 +486,19 @@ class Model {
         return status
     }
 
-    static async update({ fields = {}, where = [] }) {
+    /**
+     * 
+     * @param {data} object of data 
+     * @param {where} array of condition 
+     * @returns boolean
+     */
+    static async update({ data = {}, where = [] }) {
 
         var status = false
         try {
+
+            Model.#isValidData(data, this.fields, true)
+
             var query = FirebaseCore.admin.firestore().collection(this.collection)
             if (where.length > 0) {
                 where.forEach(({ field, operator, value, and }) => {
@@ -493,31 +508,32 @@ class Model {
                     else {
                         query = query.orWhere(field, operator, value)
                     }
-                });
+                })
             }
 
             const snapshot = await query.get();
+
             if (snapshot.empty || !snapshot) return false
 
             const timestamp = FirebaseCore.getCurrentTimestamp()
 
-            var batch = FirebaseCore.admin.firestore().batch();
+            var batch = FirebaseCore.admin.firestore().batch()
 
             snapshot.forEach((doc) => {
                 batch.update(doc.ref, {
-                    ...fields,
+                    ...data,
                     updated_at: timestamp
-                });
+                })
             })
 
             await batch.commit()
                 .then(() => {
-                    console.log("updated");
+                    // console.log("updated");
                     status = true
                 })
                 .catch((error) => {
                     console.error("Error: ", error);
-                });
+                })
 
         } catch (error) {
             console.log(error)
@@ -563,7 +579,7 @@ class Model {
             }
             await mediaRef.set(dataToStored)
             newMedias.push(dataToStored)
-            Object.assign(instance, this.#instance(info.doc, newMedias, info.role, info.collection))
+            Object.assign(instance, this.#instance(info.doc, newMedias, info.role, info.collection, info.fields))
         }
         else {
             // remove old media
@@ -581,7 +597,7 @@ class Model {
                 }
                 return _media;
             });
-            Object.assign(instance, this.#instance(info.doc, info.medias, info.role, info.collection))
+            Object.assign(instance, this.#instance(info.doc, info.medias, info.role, info.collection, info.fields))
         }
         return {
             "id": mediaId,
@@ -701,7 +717,7 @@ class Model {
                             ref: querySnapshot.docs[0].ref,
                             ...querySnapshot.docs[0].data()
                         }
-                        Object.assign(instance, this.#instance(info.doc, info.medias, roleData, info.collection))
+                        Object.assign(instance, this.#instance(info.doc, info.medias, roleData, info.collection, info.fields))
                         status = true
                     }
                 })
@@ -746,7 +762,7 @@ class Model {
                     return batch.commit();
                 })
                 .then(() => {
-                    Object.assign(instance, this.#instance(info.doc, info.medias, null, info.collection))
+                    Object.assign(instance, this.#instance(info.doc, info.medias, null, info.collection, info.fields))
                     status = true;
                 })
                 .catch((error) => {

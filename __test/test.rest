@@ -4,10 +4,9 @@ POST  http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "name": "Andre Aipassa",
-    "price": 2000
+    "name": "A Aipassa",
+    "price": 20200
 }
-
 
 ### fetch
 GET http://localhost:5000/api/product
@@ -19,15 +18,15 @@ GET http://localhost:5000/api/product/And
 GET http://localhost:5000/api/product/search/Andre
 
 ### delete
-DELETE http://localhost:5000/api/product/21000
+DELETE http://localhost:5000/api/product/NdHmWMnglOk08hbzEErB
 
 ### update
 PUT   http://localhost:5000/api/product/Ot3UxjOx7EDVqTxd9tK6
 Content-Type: application/json
 
 {
-    "name": "Andre Christian Aipassa",
-    "price": 7879
+    "name": "Chris",
+    "price": 5000
 }
 
 ### update many
@@ -35,7 +34,7 @@ PUT   http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "new_price": 1000,
+    "new_price": 8000,
     "old_price": 9000
 }
 

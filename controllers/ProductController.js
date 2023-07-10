@@ -77,7 +77,7 @@ export default class ProductController {
     }
 
     static async stored(req, res) {
-        // console.log(req.body)
+
         const { name, price } = req.body
         if (!name || !price)
             return res.status(422).json({ "message": "name and price required" })
@@ -106,11 +106,12 @@ export default class ProductController {
         const id = req.params.id
         const deleted = await Product.destroy({
             where: [
-                { "field": "price", "operator": Operator.lt, "value": parseInt(id) }
+                { "field": "id", "operator": Operator.equal, "value": id }
             ]
         })
         res.json({ "message": deleted ? "deleted" : "delete failed", })
     }
+
     static async update(req, res) {
         const id = req.params.id
 
@@ -125,16 +126,17 @@ export default class ProductController {
 
         const updated = await product.update({
             "name": name,
-            "price": price
+            // "price": price
         })
         res.json({ "message": updated ? "updated" : "update failed", })
     }
+
     static async updateMany(req, res) {
 
         const { new_price, old_price } = req.body
 
         const updated = await Product.update({
-            fields: {
+            data: {
                 "price": new_price
             },
             where: [
