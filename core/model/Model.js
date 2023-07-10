@@ -76,6 +76,9 @@ class Model {
             getRole: function () {
                 return Model.#getRole(this)
             },
+            getPermission: function () {
+                return Model.#getPermission(this)
+            },
             removeRole: async function () {
                 return await Model.#removeRole(this)
             },
@@ -299,14 +302,14 @@ class Model {
 
 
     static #isValidData(data, fields, isUpdate = false) {
-        
+
         // if is update then ignore empty fields to using data keys for checking,
         // if stored then using fields keys for checking
         const fieldNames = isUpdate ? Object.keys(data) : Object.keys(fields)
-        
+
         for (const fieldName of fieldNames) {
             const nullable = fields[fieldName].nullable
-            if (!data.hasOwnProperty(fieldName) && !nullable ) {
+            if (!data.hasOwnProperty(fieldName) && !nullable) {
                 throw new Error(`Field '${fieldName}' is missing in the data.`)
             }
             const fieldType = fields[fieldName].type
@@ -742,6 +745,7 @@ class Model {
             "permissions": info.role.permissions
         }
     }
+
     static async #removeRole(instance) {
         var status = false
         try {
@@ -772,7 +776,13 @@ class Model {
             console.error("Error: ", error);
         }
         return status
+    }
 
+    static #getPermission(instance) {
+        if (!instance) return null
+        const info = instance._info()
+        if (!info.role) return null
+        return info.role.permissions
     }
 
 }
