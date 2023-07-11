@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 import RequestValidation from '../core/validation/RequestValidation.js';
 
 class ProductRequest extends RequestValidation {
@@ -7,18 +8,17 @@ class ProductRequest extends RequestValidation {
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return object
+     * @returns object
      */
     rules() {
         return {
-            "name": {
-                "rules": ["required", "unique:products,name"]
+            name: {
+                rule: ['required', 'unique:products,name'],
             },
-            "price": {
-                "rules": ["required", "integer"]
-            }
-        }
+            price: {
+                rules: ['required', 'integer'],
+            },
+        };
     }
 }
 

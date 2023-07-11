@@ -23,13 +23,17 @@
                "allow": ["warn", "error","info"]
              }
         ],
-        "no-use-before-define": ["error", {
+        "no-use-before-define": 
+        ["error",
+         {
             "functions": false,
             "classes": true,
             "variables": true,
             "allowNamedExports": false
         }]
         ,
-        "no-await-in-loop":"off"
+        "no-await-in-loop": "off",
+        "class-methods-use-this": "off",
+        "no-unused-vars": "warn"
     }
 }
