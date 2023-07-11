@@ -1,15 +1,23 @@
 import bcrypt from 'bcrypt';
-import Permission from '../../models/Permission.js';
-import Role from '../../models/Role.js';
 import User from '../../models/User.js';
+import Permission from '../service/RolePermission/Permission.js';
+import Role from '../service/RolePermission/Role.js';
 
 const permissions = [
+    'user-access',
     'user-create',
     'user-stored',
     'user-edit',
     'user-update',
     'user-delete',
     'user-search',
+    'product-access',
+    'product-create',
+    'product-stored',
+    'product-edit',
+    'product-update',
+    'product-delete',
+    'product-search',
 ];
 
 /**

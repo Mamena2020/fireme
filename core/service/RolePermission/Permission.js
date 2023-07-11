@@ -1,7 +1,6 @@
-import Model, { DataTypes } from '../core/model/Model.js';
+import Model, { DataTypes } from '../../model/Model.js';
 
 class Permission extends Model {
-
 }
 
 Permission.init({

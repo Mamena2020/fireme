@@ -14,7 +14,7 @@ Product.init({
         },
     },
     collection: 'products',
-    hasRole: true,
+    hasRole: false,
 });
 
 export default Product;

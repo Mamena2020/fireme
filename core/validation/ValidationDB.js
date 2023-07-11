@@ -11,7 +11,6 @@ class ValidationDB {
         await query.get().then((snapshoot) => {
             if (snapshoot.docs.length > 0) {
                 status = true;
-                console.info('status', status);
             }
         }).catch((error) => {
             console.error(error);

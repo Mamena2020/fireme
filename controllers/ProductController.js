@@ -1,4 +1,5 @@
 import { Operator } from '../core/model/Model.js';
+import gateAccess from '../core/service/RolePermission/RolePermissionService.js';
 import Product from '../models/Product.js';
 import ProductRequest from '../requests/ProductRequest.js';
 
@@ -12,14 +13,17 @@ export default class ProductController {
         });
 
         res.json({
-            message: 'get single data',
+            message: 'get single product',
             product,
             media: product?.getMedia(),
-            role: product?.getRole(),
         });
     }
 
     static async fetch(req, res) {
+        if (!gateAccess(req.user, ['product-search'])) {
+            return res.json({ message: 'permission denied' });
+        }
+
         const products = await Product.findAll({
             // orderBy: {
             //     "field": "updated_at",
@@ -38,11 +42,10 @@ export default class ProductController {
                 created_at: e.created_at.toDate(),
                 updated_at: e.updated_at.toDate(),
                 medias: e.getMedia(),
-                role: e.getRole(),
             });
         });
 
-        res.json({
+        return res.json({
             message: 'get products',
             products: productResource,
         });
@@ -59,12 +62,8 @@ export default class ProductController {
 
         products.forEach((e) => {
             productResource.push({
-                // "id": e.id,
-                // "name": e.name,
-                // "price": e.price,
                 ...e,
                 medias: e.getMedia(),
-                role: e.getRole(),
             });
         });
 
@@ -94,14 +93,9 @@ export default class ProductController {
 
         if (!product) return res.json({ message: 'failed to stored' });
 
-        if (product) {
-            await product.setRole('admin');
-        }
-
         return res.json({
             message: 'store product',
             user: product,
-            role: product.getRole(),
         });
     }
 

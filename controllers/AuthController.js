@@ -1,120 +1,127 @@
-// import bcrypt from 'bcrypt';
-// import User from '../models/Product.js';
-// import RegisterRequest from '../requests/auth/RegisterRequest.js';
-// import JwtAuth from '../core/auth/JwtAuth.js';
+import bcrypt from 'bcrypt';
+import User from '../models/User.js';
+import RegisterRequest from '../requests/RegisterRequest.js';
+import LoginRequest from '../requests/LoginRequest.js';
+import JwtAuth from '../core/auth/JwtAuth.js';
+import { Operator } from '../core/model/Model.js';
 
-// const login = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
+export default class AuthController {
+    static async register(req, res) {
+        try {
+            const request = new RegisterRequest(req);
+            await request.check();
+            if (request.isError) { return request.responseError(res); }
 
-//         const user = await User.findOne({ where: { email } });
+            const { name, email, password } = req.body;
+            const salt = await bcrypt.genSalt();
+            const hashPassword = await bcrypt.hash(password, salt);
+            const user = await User.stored({
+                name,
+                email,
+                price: 1212,
+                password: hashPassword,
+            });
 
-//         const match = await bcrypt.compare(password, user.password);
+            await user.setRole('admin');
 
-//         if (!match) return res.status(400).json({ message: 'wrong password' });
+            return res.json({ message: 'register success' }).status(200);
+        } catch (error) {
+            console.error(error);
+        }
+        return res.status(409);
+    }
 
-//         const payload = {
-//             id: user.id,
-//             name: user.name,
-//             email: user.email,
-//         };
-//         const token = JwtAuth.createToken(payload);
+    static async login(req, res) {
+        try {
+            const request = new LoginRequest(req);
+            await request.check();
+            if (request.isError) { return request.responseError(res); }
 
-//         await user.update({
-//             refresh_token: token.refreshToken,
-//         });
+            const { email, password } = req.body;
 
-//         res.cookie('refreshToken', token.refreshToken, {
-//             httpOnly: true,
-//             maxAge: 24 * 60 * 60 * 1000,
-//             // secure: true
-//         });
-//         return res.json({ message: 'login success', accessToken: token.accessToken });
-//     } catch (error) {
-//         console.error(error);
-//     }
-//     return res.status(409);
-// };
+            const user = await User.findOne({
+                where: [
+                    { field: 'email', operator: Operator.equal, value: email },
+                ],
+            });
+            if (!user) return res.status(404).json({ message: 'user not found' });
 
-// const register = async (req, res) => {
-//     try {
-//         const valid = new RegisterRequest(req);
-//         await valid.check();
-//         if (valid.isError) { return valid.responseError(res); }
+            const match = await bcrypt.compare(password, user.password);
 
-//         const { name, email, password } = req.body;
-//         const salt = await bcrypt.genSalt();
-//         const hashPassword = await bcrypt.hash(password, salt);
-//         const user = await User.create({
-//             name,
-//             email,
-//             password: hashPassword,
-//         });
+            if (!match) return res.status(400).json({ message: 'wrong password' });
 
-//         await user.setRole('customer');
+            const payload = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            };
+            const token = JwtAuth.createToken(payload);
 
-//         res.json({ message: 'register success' }).status(200);
-//     } catch (error) {
-//         console.error(error);
-//     }
-//     return res.status(409);
-// };
+            await user.update({
+                refresh_token: token.refreshToken,
+            });
 
-// const refreshToken = async (req, res) => {
-//     try {
-//         const { refreshToken } = req.cookies;
+            res.cookie('refreshToken', token.refreshToken, {
+                httpOnly: true,
+                maxAge: 24 * 60 * 60 * 1000,
+                // secure: true
+            });
+            return res.json({ message: 'login success', accessToken: token.accessToken });
+        } catch (error) {
+            console.error(error);
+        }
+        return res.status(409);
+    }
 
-//         if (!refreshToken) return res.sendStatus(401);
+    static async refreshToken(req, res) {
+        try {
+            const { refreshToken } = req.cookies;
 
-//         const user = await User.findOne(
-//             {
-//                 where: {
-//                     refresh_token: refreshToken,
-//                 },
-//             },
-//         );
+            if (!refreshToken) return res.sendStatus(401);
 
-//         if (!user) return res.sendStatus(403);
+            const user = await User.findOne(
+                {
+                    where: [{
+                        field: 'refresh_token', operator: Operator.equal, value: refreshToken,
+                    }],
+                },
+            );
 
-//         const accessToken = JwtAuth.regenerateAccessToken(refreshToken);
+            if (!user) return res.sendStatus(403);
 
-//         if (!accessToken) { res.status(403); }
+            const accessToken = JwtAuth.regenerateAccessToken(refreshToken);
 
-//         res.json({ message: 'get token success', accessToken });
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
+            if (!accessToken) { res.status(403); }
 
-// const logout = async (req, res) => {
-//     try {
-//         const { refreshToken } = req.cookies;
-//         if (!refreshToken) return res.sendStatus(204);
-//         const user = await User.findOne(
-//             {
-//                 where: {
-//                     refresh_token: refreshToken,
-//                 },
-//             },
-//         );
+            return res.json({ message: 'get token success', accessToken });
+        } catch (error) {
+            console.error(error);
+        }
+        return res.sendStatus(409);
+    }
 
-//         if (!user) return res.sendStatus(204);
+    static async logout(req, res) {
+        try {
+            const { refreshToken } = req.cookies;
+            if (!refreshToken) return res.sendStatus(204);
+            const user = await User.findOne(
+                {
+                    where: [
+                        { field: 'refresh_token', operator: Operator.equal, value: refreshToken },
+                    ],
+                },
+            );
 
-//         await user.update({
-//             refresh_token: null,
-//         });
+            if (!user) return res.sendStatus(204);
 
-//         res.clearCookie('refreshToken');
+            await user.update({
+                refresh_token: null,
+            });
 
-//         res.status(200).json({ message: 'logout success' });
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
-
-// export default {
-//     login,
-//     register,
-//     refreshToken,
-//     logout,
-// };
+            return res.clearCookie('refreshToken').status(200).json({ message: 'logout success' });
+        } catch (error) {
+            console.error(error);
+        }
+        return res.sendStatus(409);
+    }
+}

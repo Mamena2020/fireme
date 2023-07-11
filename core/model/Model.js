@@ -53,7 +53,7 @@ class Model {
         this.hasRole = hasRole;
     }
 
-    static #instance(collection, fields, doc, role, medias = []) {
+    static #instance(collection, fields, hasRole, doc, role, medias = []) {
         return {
             async destroy() {
                 return Model.#destroy(this);
@@ -86,6 +86,7 @@ class Model {
                 return {
                     collection,
                     fields,
+                    hasRole,
                     doc,
                     id: doc.id,
                     ref: doc.ref,
@@ -108,6 +109,9 @@ class Model {
     static async findAll({ where = [], limit = 0, orderBy = {} } = {}) {
         let list = [];
         try {
+            if (!Array.isArray(where)) throw Error('Invalid where');
+
+            await FirebaseCore.init();
             const { collection } = this;
             let query = FirebaseCore.admin.firestore().collection(collection);
 
@@ -115,6 +119,10 @@ class Model {
                 where.forEach(({
                     field, operator, value, and,
                 }) => {
+                    if (field === undefined || operator === undefined || value === undefined) {
+                        throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
+                    }
+
                     let valueLike;
                     if (operator === Operator.like) {
                         valueLike = `${value}\uf8ff`;
@@ -170,12 +178,19 @@ class Model {
       */
     static async findOne({ where = [] } = {}) {
         try {
+            if (!Array.isArray(where)) throw Error('Invalid where');
+
+            await FirebaseCore.init();
             const { collection } = this;
             let query = FirebaseCore.admin.firestore().collection(collection);
             if (where && where.length > 0) {
                 where.forEach(({
                     field, operator, value, and,
                 }) => {
+                    if (field === undefined || operator === undefined || value === undefined) {
+                        throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
+                    }
+
                     if (and === undefined || and === true) {
                         query = query.where(field, operator, value);
                     } else {
@@ -279,6 +294,7 @@ class Model {
                                         Model.#instance(
                                             collection,
                                             fields,
+                                            hasRole,
                                             parentDoc,
                                             hasRoles[0] ?? null,
                                             medias,
@@ -297,7 +313,14 @@ class Model {
                                 });
 
                                 list.push(
-                                    Model.#instance(collection, fields, parentDoc, null, medias),
+                                    Model.#instance(
+                                        collection,
+                                        fields,
+                                        hasRole,
+                                        parentDoc,
+                                        null,
+                                        medias,
+                                    ),
                                 );
                             });
                         }
@@ -314,11 +337,13 @@ class Model {
 
     /**
        *
-       * @param {data} object of data
+       * @param {data} object of data {name:"bar"}
        * @returns object of data || null
        */
     static async stored(data = {}) {
         try {
+            await FirebaseCore.init();
+            removeUnregisteredData(data, this.fields);
             if (!isValidData(data, this.fields)) throw Error('Invalid data');
 
             const docRef = FirebaseCore.admin.firestore().collection(this.collection).doc();
@@ -332,7 +357,7 @@ class Model {
             await docRef.set(dataToStore);
             const doc = await docRef.get();
 
-            return Model.#instance(this.collection, this.fields, doc, null, []);
+            return Model.#instance(this.collection, this.fields, this.hasRole, doc, null, []);
         } catch (error) {
             console.error(error);
         }
@@ -347,9 +372,11 @@ class Model {
     static async bulkStored({ list = [] }) {
         let status = false;
         try {
+            await FirebaseCore.init();
             if (!list) throw new Error('invalid list');
 
             list.forEach((e) => {
+                removeUnregisteredData(e, this.fields);
                 if (!isValidData(e, this.fields)) throw Error('Invalid data');
             });
 
@@ -424,6 +451,7 @@ class Model {
     static async destroy({ where = [] } = {}) {
         let status = false;
         try {
+            await FirebaseCore.init();
             const instances = await this.findAll({
                 where,
             });
@@ -455,7 +483,7 @@ class Model {
             if (!instance) throw new Error('invalid new data');
 
             const info = instance.info();
-
+            removeUnregisteredData(data, info.fields);
             if (!isValidData(data, info.fields, true)) throw Error('Invalid data');
 
             const timestamp = FirebaseCore.getCurrentTimestamp();
@@ -482,6 +510,8 @@ class Model {
     static async update({ data = {}, where = [] }) {
         let status = false;
         try {
+            await FirebaseCore.init();
+            removeUnregisteredData(data, this.fields);
             if (!isValidData(data, this.fields, true)) throw Error('Invalid data');
 
             let query = FirebaseCore.admin.firestore().collection(this.collection);
@@ -565,7 +595,14 @@ class Model {
             newMedias.push(dataToStored);
             Object.assign(
                 instance,
-                this.#instance(info.collection, info.fields, info.doc, info.role, newMedias),
+                this.#instance(
+                    info.collection,
+                    info.fields,
+                    info.hasRole,
+                    info.doc,
+                    info.role,
+                    newMedias,
+                ),
             );
         } else {
             // remove old media
@@ -586,7 +623,14 @@ class Model {
             });
             Object.assign(
                 instance,
-                this.#instance(info.collection, info.fields, info.doc, info.role, info.medias),
+                this.#instance(
+                    info.collection,
+                    info.fields,
+                    info.hasRole,
+                    info.doc,
+                    info.role,
+                    info.medias,
+                ),
             );
         }
         return {
@@ -645,6 +689,7 @@ class Model {
                             this.#instance(
                                 info.collection,
                                 info.fields,
+                                info.hasRole,
                                 info.doc,
                                 info.role,
                                 newMedias,
@@ -686,10 +731,11 @@ class Model {
     static async #setRole(instance, name) {
         let status = false;
         try {
+            const info = instance.info();
+            if (!info.hasRole) throw Error('model doesn\'t have role');
             await FirebaseCore.admin.firestore().collection(roleCollection).where('name', Operator.equal, name).get()
                 .then(async (querySnapshot) => {
                     if (!querySnapshot.empty) {
-                        const info = instance.info();
                         const oldHasRoleDoc = await FirebaseCore.admin.firestore()
                             .collection(hasRoleCollection)
                             .where('ref', Operator.equal, info.ref)
@@ -721,6 +767,7 @@ class Model {
                             this.#instance(
                                 info.collection,
                                 info.fields,
+                                info.hasRole,
                                 info.doc,
                                 roleData,
                                 info.medias,
@@ -776,6 +823,7 @@ class Model {
                         this.#instance(
                             info.collection,
                             info.fields,
+                            info.hasRole,
                             info.doc,
                             null,
                             info.medias,
@@ -832,9 +880,13 @@ function isValidData(data, fields, isUpdate = false) {
         const fieldNames = isUpdate ? Object.keys(data) : Object.keys(fields);
 
         fieldNames.forEach((fieldName) => {
-            const { nullable } = fields[fieldName];
-            // if (!data.hasOwnProperty(fieldName) && !nullable) {
-            if (!Object.prototype.hasOwnProperty.call(data, fieldName) && !nullable) {
+            const nullable = fields[fieldName].nullable ?? false;
+            // if nullable -> pass data check
+            if ((!Object.prototype.hasOwnProperty.call(data, fieldName) && !nullable)
+                || (Object.prototype.hasOwnProperty.call(data, fieldName) && !nullable
+                    && data[fieldName] === undefined
+                )
+            ) {
                 throw Error(`Field '${fieldName}' is missing in the data.`);
             }
             const fieldType = fields[fieldName].type;
@@ -842,8 +894,8 @@ function isValidData(data, fields, isUpdate = false) {
             const dataType = typeof fieldValue;
             const isValid = isValidFieldType(fieldType, fieldValue);
             if (!isValid) {
-                if ((nullable && fieldValue !== undefined) || (nullable && fieldValue != null)) {
-                    throw new Error(`Invalid data type for field '${fieldName}'. Expected '${fieldType}', but got '${dataType}'.`);
+                if (nullable && fieldValue !== undefined && fieldValue !== null) {
+                    throw Error(`Invalid data type for field '${fieldName}'. Expected '${fieldType}', but got '${dataType}'.`);
                 }
             }
         });
@@ -852,6 +904,15 @@ function isValidData(data, fields, isUpdate = false) {
         console.error(error);
     }
     return false;
+}
+function removeUnregisteredData(data = {}, fields = {}) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const key in data) {
+        if (!(key in fields) && data[key]) {
+            // eslint-disable-next-line no-param-reassign
+            delete data[key];
+        }
+    }
 }
 
 export default Model;

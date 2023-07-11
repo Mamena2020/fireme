@@ -1,25 +1,25 @@
 /* eslint-disable linebreak-style */
 import RequestValidation from '../core/validation/RequestValidation.js';
 
-class ProductRequest extends RequestValidation {
+class LoginRequest extends RequestValidation {
     constructor(req) {
         super(req).load(this);
     }
 
     /**
      * Get the validation rules that apply to the request.
-     * @returns object
+     * @return object
      */
     rules() {
         return {
-            name: {
-                rules: ['required', 'unique:products,name'],
+            email: {
+                rules: ['required', 'email', 'exists:users,email'],
             },
-            price: {
-                rules: ['required', 'integer'],
+            password: {
+                rules: ['required'],
             },
         };
     }
 }
 
-export default ProductRequest;
+export default LoginRequest;

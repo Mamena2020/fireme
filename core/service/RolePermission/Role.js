@@ -1,4 +1,4 @@
-import Model, { DataTypes } from '../core/model/Model.js';
+import Model, { DataTypes } from '../../model/Model.js';
 
 class Role extends Model {
 

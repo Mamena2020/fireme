@@ -4,12 +4,13 @@ POST  http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "name": "A Aipassa",
+    "name": "Pen",
     "price": 20200
 }
 
 ### fetch
 GET http://localhost:5000/api/product
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkNmRVZra0R4SnF1dGlMclBTTVJkIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTJAZ21haWwuY29tIiwiaWF0IjoxNjg5MDU1MTA5LCJleHAiOjE2ODkwNTUxNjl9.ks6c1rwYjSID4dIjtemeJkyS3_VWJCjbwvHnOhhxIJQ
 
 ### fetch one
 GET http://localhost:5000/api/product/And
@@ -18,10 +19,10 @@ GET http://localhost:5000/api/product/And
 GET http://localhost:5000/api/product/search/Chr
 
 ### delete
-DELETE http://localhost:5000/api/product/Ot3UxjOx7EDVqTxd9tK6
+DELETE http://localhost:5000/api/product/ukuIO40HZM2hEyt9DtfG
 
 ### update
-PUT   http://localhost:5000/api/product/Ot3UxjOx7EDVqTxd9tK6
+PUT   http://localhost:5000/api/product/Qjv3VNH3HXujGrLDeDtQ
 Content-Type: application/json
 
 {
