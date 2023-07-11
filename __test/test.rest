@@ -4,16 +4,16 @@ POST  http://localhost:5000/api/product
 Content-Type: application/json
 
 {
-    "name": "Pen",
-    "price": 20200
+    "name": "Ruler",
+    "price": 40200
 }
 
 ### fetch
 GET http://localhost:5000/api/product
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkNmRVZra0R4SnF1dGlMclBTTVJkIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTJAZ21haWwuY29tIiwiaWF0IjoxNjg5MDU1MTA5LCJleHAiOjE2ODkwNTUxNjl9.ks6c1rwYjSID4dIjtemeJkyS3_VWJCjbwvHnOhhxIJQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI5NmpSWGZ5OG5TZlpxazU0NVNOIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5MTA1MjkwLCJleHAiOjE2ODkxMDUzNTB9.rc-tVgp0UVrw5FqdHV4VYk2cIOy1WfjPyBh7a1sS0-I
 
 ### fetch one
-GET http://localhost:5000/api/product/And
+GET http://localhost:5000/api/product/Pen
 
 ### search
 GET http://localhost:5000/api/product/search/Chr

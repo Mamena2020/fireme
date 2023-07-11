@@ -20,7 +20,7 @@ export default class ProductController {
     }
 
     static async fetch(req, res) {
-        if (!gateAccess(req.user, ['product-search'])) {
+        if (!gateAccess(req.user, ['product-access'])) {
             return res.json({ message: 'permission denied' });
         }
 

@@ -13,6 +13,7 @@ export default function api(app) {
     // routerGuest.get("/users", UserController.getUsers)
     routerGuest.get('/role', RoleController.fetch);
 
+    // routerGuest.get('/product', ProductController.fetch);
     routerGuest.get('/product/search/:name', ProductController.search);
     routerGuest.get('/product/:name', ProductController.getByName);
     routerGuest.post('/product', ProductController.stored);

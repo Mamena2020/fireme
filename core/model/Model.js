@@ -28,10 +28,8 @@ const Operator = Object.freeze({
     contains: 'contains',
 });
 
-const mediaCollection = 'medias';
 const roleCollection = 'roles';
 // const permissionCollection = "permissions"
-const hasRoleCollection = 'has_roles';
 
 class Model {
     fields = {};
@@ -53,13 +51,13 @@ class Model {
         this.hasRole = hasRole;
     }
 
-    static #instance(collection, fields, hasRole, doc, role, medias = []) {
+    static #instance(collection, fields, hasRole, doc, data, role, medias = []) {
         return {
             async destroy() {
                 return Model.#destroy(this);
             },
-            async update(data) {
-                return Model.#update(this, data);
+            async update(newData) {
+                return Model.#update(this, newData);
             },
             async saveMedia(file, name) {
                 return Model.#saveMedia(this, file, name);
@@ -94,7 +92,7 @@ class Model {
                     medias,
                 };
             },
-            ...doc.data(),
+            ...data,
         };
     }
 
@@ -216,121 +214,51 @@ class Model {
         query = FirebaseCore.admin.firestore().collection(),
     ) {
         const list = [];
-
-        await query.get()
-            .then(async (parentSnapshot) => {
-                // create array ref parent
-                const parentRefs = parentSnapshot.docs.map((parentDoc) => parentDoc.ref);
-                // init array promise for batch read
-                const batchGetPromises = [];
-
-                // fetch role data first
+        const batchGetPromises = [];
+        if (hasRole) {
+            const rolesBatchPromise = FirebaseCore.admin.firestore()
+                .collection(roleCollection).get();
+            batchGetPromises.push(Promise.all([rolesBatchPromise]));
+        }
+        batchGetPromises.push(Promise.all([query.get()]));
+        // run batch read at same time
+        await Promise.all(batchGetPromises)
+            .then((batchResults) => {
+                let roles;
+                let snapshot;
                 if (hasRole) {
-                    const rolesBatchPromise = FirebaseCore.admin.firestore()
-                        .collection(roleCollection).get();
-                    batchGetPromises.push(Promise.all([rolesBatchPromise]));
+                    const [roleSnapshoot, querySnapshot] = batchResults;
+                    roles = roleSnapshoot;
+                    snapshot = querySnapshot;
+                } else {
+                    const [querySnapshot] = batchResults;
+                    snapshot = querySnapshot;
                 }
-
-                // create batch read for every ref parent
-                parentRefs.forEach((parentRef) => {
-                    // media
-                    const media = FirebaseCore.admin.firestore().collection(mediaCollection).where('ref', Operator.equal, parentRef);
-                    const mediaBatchPromise = media.get();
-                    // has role
-                    if (hasRole) {
-                        const hasRoleBatchPromise = FirebaseCore.admin.firestore()
-                            .collection(hasRoleCollection)
-                            .where('ref', Operator.equal, parentRef)
-                            .get();
-                        batchGetPromises.push(Promise.all(
-                            [
-                                mediaBatchPromise,
-                                hasRoleBatchPromise,
-                            ],
-                        ));
-                    } else {
-                        batchGetPromises.push(Promise.all([mediaBatchPromise]));
-                    }
-                });
-                // run batch read at same time
-                return Promise.all(batchGetPromises)
-                    .then((batchResults) => {
-                        if (hasRole) {
-                            const roles = [];
-                            for (let i = 0; i < batchResults.length; i += 1) {
-                                if (i === 0) {
-                                    // store roles data
-                                    const [roleSnapshot] = batchResults[i];
-                                    roleSnapshot.docs.forEach((doc) => {
-                                        roles.push({
-                                            ref: doc.ref,
-                                            ...doc.data(),
-                                        });
-                                    });
-                                }
-                                if (i > 0) {
-                                    const medias = [];
-                                    const [mediaSnapshot, hasRoleSnapshot] = batchResults[i];
-                                    const parentDoc = parentSnapshot
-                                        .docs[i - 1]; // -1 -> i===0 used for roles
-                                    mediaSnapshot.forEach((mediaDoc) => {
-                                        if (mediaDoc) {
-                                            medias.push(mediaDoc.data());
-                                        }
-                                    });
-                                    // has role
-                                    const hasRoles = [];
-                                    hasRoleSnapshot.forEach((hasRoleDoc) => {
-                                        if (hasRoleDoc.data() && hasRoleDoc.data().role_ref) {
-                                            const role = roles.filter((item) => item.id
-                                                === hasRoleDoc.data().role_ref.id);
-                                            if (role) {
-                                                hasRoles.push(role[0]);
-                                            }
-                                        }
-                                    });
-
-                                    list.push(
-                                        Model.#instance(
-                                            collection,
-                                            fields,
-                                            hasRole,
-                                            parentDoc,
-                                            hasRoles[0] ?? null,
-                                            medias,
-                                        ),
-                                    );
-                                }
+                snapshot[0].docs.forEach((doc) => {
+                    // eslint-disable-next-line camelcase
+                    const { medias, role_ref, ...data } = doc.data();
+                    let role = null;
+                    // eslint-disable-next-line camelcase
+                    if (hasRole && Array.isArray(roles) && role_ref) {
+                        roles[0].docs.forEach((r) => {
+                            // eslint-disable-next-line camelcase
+                            if (role_ref.path === r.ref.path) {
+                                role = r.data();
                             }
-                        } else {
-                            batchResults.forEach(([mediaSnapshot], index) => {
-                                const parentDoc = parentSnapshot.docs[index];
-                                const medias = [];
-                                mediaSnapshot.forEach((mediaDoc) => {
-                                    if (mediaDoc) {
-                                        medias.push(mediaDoc.data());
-                                    }
-                                });
-
-                                list.push(
-                                    Model.#instance(
-                                        collection,
-                                        fields,
-                                        hasRole,
-                                        parentDoc,
-                                        null,
-                                        medias,
-                                    ),
-                                );
-                            });
-                        }
-                    })
-                    .catch((error) => {
-                        console.error('Error parent & media', error);
-                    });
-            })
-            .catch((error) => {
-                console.error('Error parent: ', error);
+                        });
+                    }
+                    list.push(
+                        Model.#instance(
+                            collection,
+                            fields,
+                            hasRole,
+                            doc,
+                            data,
+                            role,
+                            medias ?? [],
+                        ),
+                    );
+                });
             });
         return list;
     }
@@ -354,10 +282,18 @@ class Model {
                 updated_at: timestamp,
                 ...data,
             };
+
             await docRef.set(dataToStore);
             const doc = await docRef.get();
-
-            return Model.#instance(this.collection, this.fields, this.hasRole, doc, null, []);
+            return Model.#instance(
+                this.collection,
+                this.fields,
+                this.hasRole,
+                doc,
+                doc.data(),
+                null,
+                [],
+            );
         } catch (error) {
             console.error(error);
         }
@@ -416,7 +352,6 @@ class Model {
         try {
             const info = instance.info();
             const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id);
-
             // delete all medias
             if (info.medias.length > 0) {
                 const paths = [];
@@ -425,14 +360,12 @@ class Model {
                     paths.push(media.path);
                 });
                 await FirebaseCore.deleteMedias(paths).finally(async () => {
-                    await this.#destroyMedias(docRef);
                 });
             }
             // delete roles
             if (info.role) {
                 await this.#removeRole(instance);
             }
-
             await docRef.delete()
                 .then(async () => {
                     status = true;
@@ -457,12 +390,12 @@ class Model {
             });
             if (!instances || instances.length === 0) throw new Error('not found');
             let deletedCount = 0;
-            instances.forEach((instance) => {
-                const deleted = instance.destroy();
+            for (let i = 0; i < instances.length; i += 1) {
+                const deleted = await instances[i].destroy();
                 if (deleted) {
                     deletedCount += 1;
                 }
-            });
+            }
             if (deletedCount === instances.length) {
                 status = true;
             }
@@ -563,36 +496,32 @@ class Model {
         }
 
         const info = instance.info();
-
         const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id);
-
-        const oldMediaDoc = await FirebaseCore.admin.firestore().collection(mediaCollection)
-            .where('ref', Operator.equal, docRef)
-            .where('name', Operator.equal, name)
-            .get();
-
         const media = await FirebaseCore.saveMedia(file);
 
         if (!media) return null;
-        let mediaId;
+        const oldData = Object.keys(instance).reduce((result, key) => {
+            if (typeof instance[key] !== 'function') {
+                // eslint-disable-next-line no-param-reassign
+                result[key] = instance[key];
+            }
+            return result;
+        }, {});
+
         const newData = {
             name,
             url: media.url,
             path: media.path,
-            ref: docRef,
         };
-        const newMedias = info.medias ?? [];
-
+        const medias = info.medias ?? [];
+        const oldMedia = instance.getMedia(name);
         // create new
-        if (oldMediaDoc.empty) {
-            const mediaRef = FirebaseCore.admin.firestore().collection(mediaCollection).doc();
-            mediaId = mediaRef.id;
-            const dataToStored = {
-                id: mediaId,
-                ...newData,
-            };
-            await mediaRef.set(dataToStored);
-            newMedias.push(dataToStored);
+        if (!oldMedia) {
+            medias.push(newData);
+            await docRef.update({
+                medias,
+            });
+
             Object.assign(
                 instance,
                 this.#instance(
@@ -600,26 +529,24 @@ class Model {
                     info.fields,
                     info.hasRole,
                     info.doc,
+                    oldData,
                     info.role,
-                    newMedias,
+                    medias,
                 ),
             );
         } else {
             // remove old media
-            await FirebaseCore.deleteMedia(oldMediaDoc.docs[0].data().path);
-            // update
-            await oldMediaDoc.docs[0].ref.update(newData);
-            mediaId = oldMediaDoc.docs[0].ref.id;
-
-            // update media iin info
+            await FirebaseCore.deleteMedia(oldMedia.path);
+            // update media in info
             info.medias = info.medias.map((_media) => {
                 if (_media.name === name) {
-                    return {
-                        id: mediaId,
-                        ...newData,
-                    };
+                    return newData;
                 }
                 return _media;
+            });
+            // update to firestore
+            await docRef.update({
+                medias: info.medias,
             });
             Object.assign(
                 instance,
@@ -628,13 +555,13 @@ class Model {
                     info.fields,
                     info.hasRole,
                     info.doc,
+                    oldData,
                     info.role,
                     info.medias,
                 ),
             );
         }
         return {
-            id: mediaId,
             name,
             url: media.url,
             path: media.path,
@@ -647,16 +574,10 @@ class Model {
         const medias = [];
         let mediaTemp = null;
         info.medias.forEach((media) => {
-            const mediaData = {
-                id: media.id,
-                name: media.name,
-                url: media.url,
-                path: media.path,
-            };
             if (name === media.name) {
-                mediaTemp = mediaData;
+                mediaTemp = media;
             }
-            medias.push(mediaData);
+            medias.push(media);
         });
         if (mediaTemp !== null) return mediaTemp;
         if (name) return null;
@@ -668,64 +589,44 @@ class Model {
         try {
             const info = instance.info();
             let media;
-
             info.medias.forEach((_media) => {
                 if (name === _media.name) {
                     media = _media;
                 }
             });
-
             if (media === undefined) throw new Error('media not found');
             // remove old media
             await FirebaseCore.deleteMedia(media.path).finally(async () => {
-                const mediaRef = FirebaseCore.admin.firestore()
-                    .collection(mediaCollection).doc(media.id);
-                const docSnapshot = await mediaRef.get();
-                if (docSnapshot.exists) {
-                    await mediaRef.delete().then(() => {
-                        const newMedias = info.medias.filter((_media) => _media.name !== name);
-                        Object.assign(
-                            instance,
-                            this.#instance(
-                                info.collection,
-                                info.fields,
-                                info.hasRole,
-                                info.doc,
-                                info.role,
-                                newMedias,
-                            ),
-                        );
-                        status = true;
-                    });
-                }
+                const docRef = FirebaseCore.admin.firestore()
+                    .collection(info.collection).doc(info.id);
+                const newMedias = info.medias.filter((_media) => _media.name !== name);
+                await docRef.update({ medias: newMedias }).then(() => {
+                    const oldData = Object.keys(instance).reduce((result, key) => {
+                        if (typeof instance[key] !== 'function') {
+                            // eslint-disable-next-line no-param-reassign
+                            result[key] = instance[key];
+                        }
+                        return result;
+                    }, {});
+                    Object.assign(
+                        instance,
+                        this.#instance(
+                            info.collection,
+                            info.fields,
+                            info.hasRole,
+                            info.doc,
+                            oldData,
+                            info.role,
+                            newMedias,
+                        ),
+                    );
+                    status = true;
+                });
             });
         } catch (error) {
             console.error('error: ', error);
         }
         return status;
-    }
-
-    static async #destroyMedias(instanceRef) {
-        try {
-            await FirebaseCore.admin.firestore().collection(mediaCollection).where('ref', Operator.equal, instanceRef).get()
-                .then((snapshot) => {
-                    // collect media doc ref
-                    const batch = FirebaseCore.admin.firestore().batch();
-                    snapshot.forEach((doc) => {
-                        batch.delete(doc.ref);
-                    });
-                    // run batch
-                    return batch.commit();
-                })
-                .then(() => {
-                    // console.error("deleted");
-                })
-                .catch((error) => {
-                    console.error('Error: ', error);
-                });
-        } catch (error) {
-            console.error('error: ', error);
-        }
     }
 
     static async #setRole(instance, name) {
@@ -736,32 +637,18 @@ class Model {
             await FirebaseCore.admin.firestore().collection(roleCollection).where('name', Operator.equal, name).get()
                 .then(async (querySnapshot) => {
                     if (!querySnapshot.empty) {
-                        const oldHasRoleDoc = await FirebaseCore.admin.firestore()
-                            .collection(hasRoleCollection)
-                            .where('ref', Operator.equal, info.ref)
-                            .where('role_ref', Operator.equal, querySnapshot.docs[0].ref)
-                            .get();
-                        const newData = {
-                            ref: info.ref,
-                            role_ref: querySnapshot.docs[0].ref,
-                        };
-                        if (oldHasRoleDoc.empty) {
-                            // create new
-                            const hasRoleRef = FirebaseCore.admin.firestore()
-                                .collection(hasRoleCollection).doc();
-                            await hasRoleRef.set({
-                                id: hasRoleRef.id,
-                                ...newData,
-                            });
-                        } else {
-                            // update
-                            await oldHasRoleDoc.docs[0].ref.update(newData);
-                        }
-                        // update role to instance
-                        const roleData = {
-                            ref: querySnapshot.docs[0].ref,
-                            ...querySnapshot.docs[0].data(),
-                        };
+                        const roleRef = querySnapshot.docs[0].ref;
+                        const roleData = querySnapshot.docs[0].data();
+                        await info.ref.update({
+                            role_ref: roleRef,
+                        });
+                        const oldData = Object.keys(instance).reduce((result, key) => {
+                            if (typeof instance[key] !== 'function') {
+                                // eslint-disable-next-line no-param-reassign
+                                result[key] = instance[key];
+                            }
+                            return result;
+                        }, {});
                         Object.assign(
                             instance,
                             this.#instance(
@@ -769,6 +656,7 @@ class Model {
                                 info.fields,
                                 info.hasRole,
                                 info.doc,
+                                oldData,
                                 roleData,
                                 info.medias,
                             ),
@@ -804,20 +692,19 @@ class Model {
             const info = instance.info();
             if (!info.role) throw Error('no role');
 
-            await FirebaseCore.admin.firestore().collection(hasRoleCollection)
-                .where('ref', Operator.equal, info.ref)
-                .where('role_ref', Operator.equal, info.role.ref)
-                .get()
-                .then((snapshot) => {
-                    // collect media doc ref
-                    const batch = FirebaseCore.admin.firestore().batch();
-                    snapshot.forEach((doc) => {
-                        batch.delete(doc.ref);
-                    });
-                    // run batch
-                    return batch.commit();
-                })
+            const updateData = {
+                role_ref: FirebaseCore.admin.firestore.FieldValue.delete(),
+            };
+
+            info.ref.update(updateData)
                 .then(() => {
+                    const oldData = Object.keys(instance).reduce((result, key) => {
+                        if (typeof instance[key] !== 'function') {
+                            // eslint-disable-next-line no-param-reassign
+                            result[key] = instance[key];
+                        }
+                        return result;
+                    }, {});
                     Object.assign(
                         instance,
                         this.#instance(
@@ -825,6 +712,7 @@ class Model {
                             info.fields,
                             info.hasRole,
                             info.doc,
+                            oldData,
                             null,
                             info.medias,
                         ),
@@ -832,7 +720,7 @@ class Model {
                     status = true;
                 })
                 .catch((error) => {
-                    console.error('Error: ', error);
+                    console.error('Error:', error);
                 });
         } catch (error) {
             console.error('Error: ', error);
