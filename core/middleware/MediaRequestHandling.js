@@ -37,15 +37,16 @@ const isArrayNested = (name) => {
 const clearTempFiles = (res, files) => {
     res.on('finish', () => {
         try {
-            files.forEach((fieldName) => {
+            // eslint-disable-next-line no-restricted-syntax
+            for (const fieldName of Object.keys(files)) {
                 try {
                     if (fse.pathExistsSync(files[fieldName].tempDir)) {
                         fse.removeSync(files[fieldName].tempDir);
                     }
-                } catch (error1) {
-                    console.error(error1);
+                } catch (error) {
+                    console.error(error);
                 }
-            });
+            }
         } catch (error) {
             console.error(error);
         }

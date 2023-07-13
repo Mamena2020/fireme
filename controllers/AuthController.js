@@ -18,7 +18,6 @@ export default class AuthController {
             const user = await User.stored({
                 name,
                 email,
-                price: 1212,
                 password: hashPassword,
             });
 

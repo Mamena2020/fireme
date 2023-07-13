@@ -17,8 +17,8 @@ const JwtAuthPass = async (req, res, next) => {
     if (!accessToken) {
         return res.status(403).json({ message: 'unauthorized' });
     }
-    jwt.verify(accessToken, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, async (err, decoded) => {
-        if (err) return res.status(403).json({ message: 'unauthorized' });
+    jwt.verify(accessToken, process.env.AUTH_JWT_ACCESS_TOKEN_SECRET, async (error, decoded) => {
+        if (error) return res.status(403).json({ message: 'unauthorized' });
         const currentDate = new Date();
         if (decoded.exp * 1000 < currentDate.getTime()) { return res.status(410).json({ message: 'access token expired' }); }
 

@@ -1,6 +1,5 @@
 import express from 'express';
 import defaultMiddleware from './middleware/Middleware.js';
-import { routeStoragePublic } from './config/Media.js';
 import api from '../routes/api.js';
 import web from '../routes/web.js';
 import FirebaseCore from './firebase/FirebaseCore.js';
@@ -22,8 +21,6 @@ const Load = (app) => new Promise(async (resolve, reject) => {
         // ------------------------------------------------------- Routers
 
         app.use(express.static('public'));
-
-        routeStoragePublic(app);
 
         api(app);
         web(app);

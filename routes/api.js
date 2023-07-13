@@ -1,34 +1,24 @@
 import express from 'express';
 import JwtAuthPass from '../core/middleware/JwtAuthPass.js';
-import ProductController from '../controllers/ProductController.js';
-import RoleController from '../controllers/RoleController.js';
 import AuthController from '../controllers/AuthController.js';
+import UserController from '../controllers/UserController.js';
+// import BasicAuthPass from '../core/middleware/BasicAuthPass.js';
 
 export default function api(app) {
     const routerGuest = express.Router();
+    // const routerAuthBasic = express.Router();
+    const routerAuth = express.Router();
+
     routerGuest.post('/login', AuthController.login);
     routerGuest.post('/register', AuthController.register);
     routerGuest.get('/token', AuthController.refreshToken);
     routerGuest.delete('/logout', AuthController.logout);
-    // routerGuest.get("/users", UserController.getUsers)
-    routerGuest.get('/role', RoleController.fetch);
+    routerGuest.get('/user', UserController.user);
 
-    // routerGuest.get('/product', ProductController.fetch);
-    routerGuest.get('/product/search/:name', ProductController.search);
-    routerGuest.get('/product/:name', ProductController.getByName);
-    routerGuest.post('/product', ProductController.stored);
-    routerGuest.delete('/product/:id', ProductController.delete);
-    routerGuest.put('/product/:id', ProductController.update);
-    routerGuest.put('/product', ProductController.updateMany);
-    routerGuest.post('/product/:id/image', ProductController.addImage);
-    routerGuest.delete('/product/:id/image/:name', ProductController.destroyImage);
-    routerGuest.delete('/product/:id/role', ProductController.removeRole);
+    // routerAuthBasic.get('/user2', BasicAuthPass, AuthController.user);
+    routerAuth.post('/user/avatar', JwtAuthPass, UserController.uploadAvatar);
 
     app.use('/api', routerGuest);
-    // routerGuest.get("/:locale/users", LocalePass, UserController.getUsers)
-
-    const routerAuth = express.Router();
-    routerAuth.use(JwtAuthPass);
-    routerAuth.get('/product', ProductController.fetch);
+    // app.use('/api', routerAuthBasic);
     app.use('/api', routerAuth);
 }

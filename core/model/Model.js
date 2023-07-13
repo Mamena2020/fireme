@@ -145,18 +145,9 @@ class Model {
                     }
                 });
             }
-
             if (Object.keys(orderBy).length > 0) {
-                let order = orderBy.field;
-                if (order === 'created_at') {
-                    order = 'createTime';
-                }
-                if (order === 'updated_at') {
-                    order = 'updateTime';
-                }
-                query = query.orderBy(order, orderBy.sort);
+                query = query.orderBy(orderBy.field, orderBy.sort);
             }
-
             if (typeof limit === 'number' && limit > 0) {
                 query = query.limit(limit);
             }
@@ -188,7 +179,6 @@ class Model {
                     if (field === undefined || operator === undefined || value === undefined) {
                         throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
                     }
-
                     if (and === undefined || and === true) {
                         query = query.where(field, operator, value);
                     } else {
@@ -197,9 +187,7 @@ class Model {
                 });
             }
             query = query.limit(1);
-
             const list = await Model.#batchFetch(collection, this.fields, this.hasRole, query);
-
             return list[0] ?? null;
         } catch (error) {
             console.error(error);
@@ -220,7 +208,8 @@ class Model {
                 .collection(roleCollection).get();
             batchGetPromises.push(Promise.all([rolesBatchPromise]));
         }
-        batchGetPromises.push(Promise.all([query.get()]));
+        const queryBatchPromise = query.get();
+        batchGetPromises.push(Promise.all([queryBatchPromise]));
         // run batch read at same time
         await Promise.all(batchGetPromises)
             .then((batchResults) => {
@@ -228,24 +217,26 @@ class Model {
                 let snapshot;
                 if (hasRole) {
                     const [roleSnapshoot, querySnapshot] = batchResults;
-                    roles = roleSnapshoot;
-                    snapshot = querySnapshot;
+                    roles = roleSnapshoot[0]?.docs ?? [];
+                    snapshot = querySnapshot[0]?.docs ?? [];
                 } else {
                     const [querySnapshot] = batchResults;
-                    snapshot = querySnapshot;
+                    snapshot = querySnapshot[0]?.docs ?? [];
                 }
-                snapshot[0].docs.forEach((doc) => {
+                for (let i = 0; i < snapshot.length; i += 1) {
+                    const doc = snapshot[i];
                     // eslint-disable-next-line camelcase
                     const { medias, role_ref, ...data } = doc.data();
                     let role = null;
                     // eslint-disable-next-line camelcase
-                    if (hasRole && Array.isArray(roles) && role_ref) {
-                        roles[0].docs.forEach((r) => {
+                    if (hasRole && roles.length > 0 && role_ref) {
+                        for (let j = 0; j < roles.length; j += 1) {
                             // eslint-disable-next-line camelcase
-                            if (role_ref.path === r.ref.path) {
-                                role = r.data();
+                            if (String(role_ref.path) === String(roles[j].ref.path)) {
+                                role = roles[j].data();
+                                break;
                             }
-                        });
+                        }
                     }
                     list.push(
                         Model.#instance(
@@ -258,7 +249,7 @@ class Model {
                             medias ?? [],
                         ),
                     );
-                });
+                }
             });
         return list;
     }
