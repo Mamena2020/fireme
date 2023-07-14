@@ -25,8 +25,17 @@ GET http://localhost:5000/api/token
 DELETE  http://localhost:5000/api/logout
 
 ### users
+GET http://localhost:5000/api/users
+
+### NEED AUTH ------------------------------------------------
+### users
 GET http://localhost:5000/api/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI5NmpSWGZ5OG5TZlpxazU0NVNOIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5MjkzNTE2LCJleHAiOjE2ODkyOTQ0MTZ9.Y8LWMVYLvfyEetBPkFbUOI3xQ_fIRQLbVGF-YenlYC0
 
 ### upload avatar
 POST http://localhost:5000/api/user/avatar
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI5NmpSWGZ5OG5TZlpxazU0NVNOIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5MTMyODkxLCJleHAiOjE2ODkxMzM3OTF9.PustdngnknEqrAc1bDla0jDo2s6rEkGPKL9f0RKwvXg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI5NmpSWGZ5OG5TZlpxazU0NVNOIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5MjkzNTE2LCJleHAiOjE2ODkyOTQ0MTZ9.Y8LWMVYLvfyEetBPkFbUOI3xQ_fIRQLbVGF-YenlYC0
+
+### remove avatar
+DELETE http://localhost:5000/api/user/avatar
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImI5NmpSWGZ5OG5TZlpxazU0NVNOIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5MjkzNTE2LCJleHAiOjE2ODkyOTQ0MTZ9.Y8LWMVYLvfyEetBPkFbUOI3xQ_fIRQLbVGF-YenlYC0

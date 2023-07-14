@@ -13,10 +13,13 @@ export default function api(app) {
     routerGuest.post('/register', AuthController.register);
     routerGuest.get('/token', AuthController.refreshToken);
     routerGuest.delete('/logout', AuthController.logout);
-    routerGuest.get('/user', UserController.user);
+    routerGuest.get('/users', UserController.users);
 
     // routerAuthBasic.get('/user2', BasicAuthPass, AuthController.user);
+
+    routerGuest.get('/user', JwtAuthPass, UserController.user);
     routerAuth.post('/user/avatar', JwtAuthPass, UserController.uploadAvatar);
+    routerAuth.delete('/user/avatar', JwtAuthPass, UserController.removeAvatar);
 
     app.use('/api', routerGuest);
     // app.use('/api', routerAuthBasic);
