@@ -276,7 +276,7 @@ Get single data using `findOne` static method. This method required `where` cond
 
 ```
 
-Get many data using `findAll` static method. This method required `where` condition, and have optional parameter `limit`, and `orderBy`.
+Get many data using `findAll` static method. This method required `where` condition, and have optional parameter `limit`, and `orderBy`. <br>
 `orderBy` required 2 property `field` and `sort`, `sort` can be `asc` or `desc`.
 
 ```
@@ -293,6 +293,20 @@ Get many data using `findAll` static method. This method required `where` condit
                         }
                     });
 
+```
+
+- ### Field Data Types
+
+```
+    string: 'string',
+    number: 'number',
+    boolean: 'boolean',
+    map: 'map',
+    array: 'array',
+    null: 'null',
+    timestamp: 'timestamp',
+    geopoint: 'geopoint',
+    reference: 'reference',
 ```
 
 - ### Operators
