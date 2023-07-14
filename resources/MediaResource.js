@@ -1,8 +1,7 @@
 /* eslint-disable linebreak-style */
 import Resource from '../core/resource/Resource.js';
-import MediaResource from './MediaResource.js';
 
-class UserResource extends Resource {
+class MediaResource extends Resource {
     constructor() {
         super().load(this);
     }
@@ -13,13 +12,10 @@ class UserResource extends Resource {
      */
     toArray(data) {
         return {
-            id: data.id,
             name: data.name,
-            email: data.email,
-            role: data.getRole()?.name ?? null,
-            media: new MediaResource().collection(data.getMedia()),
+            url: data.url,
         };
     }
 }
 
-export default UserResource;
+export default MediaResource;

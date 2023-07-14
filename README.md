@@ -1,11 +1,11 @@
 # Fireme
+
 <center>
 Boilerplate for nodejs. base on express js with Firebase.
 </center>
 <center style='margin-top:20px; margin-bottom:20px;'>
 <img src='fireme.png' style='max-height:500px;'>
 </center>
-
 
 - ### Features
 
@@ -57,36 +57,36 @@ Boilerplate for nodejs. base on express js with Firebase.
 
 - ### Live demo
 
-  | Action        | Method | Auth   | Body             | EndPoint                                             |
-  | ------------- | ------ | ------ | ---------------- | ---------------------------------------------------- |
-  | Login         | POST   |        | email            | https://fireme-mamena2020.vercel.app/api/login       |
-  |               |        |        | password         |                                                      |
-  |               |        |        |                  |                                                      |
-  | Register      | POST   |        | email            | https://fireme-mamena2020.vercel.app/api/register    |
-  |               |        |        | name             |                                                      |
-  |               |        |        | password         |                                                      |
-  |               |        |        | confirm_password |                                                      |
-  |               |        |        |                  |                                                      |
-  | Token         | GET    |        |                  | https://fireme-mamena2020.vercel.app/api/token       |
-  |               |        |        |                  |                                                      |
-  |               |        |        |                  |                                                      |
-  | Logout        | DELETE |        |                  | https://fireme-mamena2020.vercel.app/api/logout      |
-  |               |        |        |                  |                                                      |
-  | Get User      | GET    | Bearer |                  | https://fireme-mamena2020.vercel.app/api/user        |
-  |               |        | token  |                  |                                                      |
-  |               |        |        |                  |                                                      |
-  | Upload avatar | POST   | Bearer | avatar (file)    | https://fireme-mamena2020.vercel.app/api/user/avatar |
-  |               |        | token  |                  |                                                      |
-  |               |        |        |                  |                                                      |
-  | Remove avatar | DELETE | Bearer |                  | https://fireme-mamena2020.vercel.app/api/user/avatar |
-  |               |        | token  |                  |                                                      |
-  |               |        |        |                  |                                                      |
-  | Get Users     | GET    |        |                  | https://fireme-mamena2020.vercel.app/api/users       |
-  |               |        |        |                  |                                                      |
+  | Action        | Method | Auth   | Body             | EndPoint                                  |
+  | ------------- | ------ | ------ | ---------------- | ----------------------------------------- |
+  | Login         | POST   |        | email            | https://fireme.vercel.app/api/login       |
+  |               |        |        | password         |                                           |
+  |               |        |        |                  |                                           |
+  | Register      | POST   |        | email            | https://fireme.vercel.app/api/register    |
+  |               |        |        | name             |                                           |
+  |               |        |        | password         |                                           |
+  |               |        |        | confirm_password |                                           |
+  |               |        |        |                  |                                           |
+  | Token         | GET    |        |                  | https://fireme.vercel.app/api/token       |
+  |               |        |        |                  |                                           |
+  |               |        |        |                  |                                           |
+  | Logout        | DELETE |        |                  | https://fireme.vercel.app/api/logout      |
+  |               |        |        |                  |                                           |
+  | Get User      | GET    | Bearer |                  | https://fireme.vercel.app/api/user        |
+  |               |        | token  |                  |                                           |
+  |               |        |        |                  |                                           |
+  | Upload avatar | POST   | Bearer | avatar (file)    | https://fireme.vercel.app/api/user/avatar |
+  |               |        | token  |                  |                                           |
+  |               |        |        |                  |                                           |
+  | Remove avatar | DELETE | Bearer |                  | https://fireme.vercel.app/api/user/avatar |
+  |               |        | token  |                  |                                           |
+  |               |        |        |                  |                                           |
+  | Get Users     | GET    |        |                  | https://fireme.vercel.app/api/users       |
+  |               |        |        |                  |                                           |
 
 # Getting Started
 
-- ### Clone 
+- ### Clone
 
 Clone this repo `https` or `SSH` and move to directory project and run `npm install`
 
@@ -106,15 +106,15 @@ After clone, you can create `.env` file from `.env.example`.
 
 - ### Create firebase project
 
-Create new Firebase project on <a href='https://console.firebase.google.com'>Firebase Console</a>. 
-After create firebase project, go to `project settings -> service accounts`, then generate new private key, 
-after download Service Account .json, convert to `base64 string`, then set to 
+Create new Firebase project on <a href='https://console.firebase.google.com'>Firebase Console</a>.
+After create firebase project, go to `project settings -> service accounts`, then generate new private key,
+after download Service Account .json, convert to `base64 string`, then set to
 `FIREBASE_SERVICE_ACCOUNT_BASE64` in the `.env` file, and then go to firebase `storage` and copy firebase bucket name and
 set to `FIREBASE_STORAGE_BUCKET` in the `.env` file.
 
 ```
-   FIREBASE_STORAGE_BUCKET=gs://your-project.appspot.com 
-   FIREBASE_SERVICE_ACCOUNT_BASE64= # base64 of firebaseServiceAccount.json 
+   FIREBASE_STORAGE_BUCKET=gs://your-project.appspot.com
+   FIREBASE_SERVICE_ACCOUNT_BASE64= # base64 of firebaseServiceAccount.json
 
 ```
 
@@ -419,6 +419,7 @@ Handling Content-Type header for
       - application/x-www-form-urlencoded
 
 Handling all upload files on `POST` and `PUT` method, and nested fields.
+- ### file properties
 
 ```
      // uploaded file will have this property
@@ -915,10 +916,9 @@ Assign permissions to a role by using `roleInstance.assignPermissions(params)`, 
 
 ```
 
-
 - ### Noted
 
-There is no ref between permission and role, permission only stored all permission. The role has own field type an array to stored permission. 
+There is no ref between permission and role, permission only stored all permission. The role has own field type an array to stored permission.
 
 # Resource
 
@@ -1051,18 +1051,24 @@ Regenerate access token by calling `JwtAuth.regenerateAccessToken(refreshToken)`
 
 - ### Get Auth user
 
-Get authenticated user by `calling JwtAuth.getUser(req)`, that will get user by refresh token on request cookies.
+Get authenticated user by `calling JwtAuth.getUser(email)`, that will get user by email.
 
 ```
 
-   const user = await JwtAuth.getUser(req)
+   const user = await JwtAuth.getUser(email)
 
 ```
 
 Or you just setup the .env `AUTH_GET_CURRENT_USER_ON_REQUEST=true` and you can access current authenticated user by access
-`req.user`.
+`req.user`. You can found the code where current user instance set to req.user in `core/middleware/JwtAuthPass.js` file.
 
-Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model inside the `AuthConfig` in the `core/config/Auth.js` file. It is crucial that your User model has a `refresh_token` field, as `JwtAuth.GetUser()` will retrieve the user instance based on the `refresh_token` by default. However, if you prefer to retrieve the current authenticated user in a different manner, you can modify the `JwtAuth.GetUser()` function to suit your needs in `core/auth/JwtAuth.js` file.
+```
+    req.user = await JwtAuth.getUser(email);
+```
+
+Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model inside the `AuthConfig` in the `core/config/Auth.js` file. 
+
+- Default user model for auth in `core/config/Auth.js`.
 
 ```
    class AuthConfig {
@@ -1074,13 +1080,17 @@ Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model 
        static user = User
 ```
 
-- ### Middleware auth jwt
+It is crucial that your User model has a `email` field, as `JwtAuth.GetUser()` will retrieve the user instance based on the `email` by default. However, if you prefer to retrieve the current authenticated user in a different manner, you can modify the `JwtAuth.GetUser()` function to suit your needs in `core/auth/JwtAuth.js` file.
+
+
+
+- ### Use Middleware - Auth jwt
 
 For secure access to controller by adding `JwtAuthPass` to your router.
 
 ```
    import JwtAuthPass from '../core/middleware/JwtAuthPass.js';
-   
+
    routerAuth.use(JwtAuthPass)
    routerAuth.get("/upload", UserController.upload)
 
@@ -1088,12 +1098,12 @@ For secure access to controller by adding `JwtAuthPass` to your router.
 
 ```
 
-- ### Middleware basic auth
+- ### Use Middleware - Basic auth
 
 For secure access to controller by adding `BasicAuthPass` to your router.
 
 ```
-   import BasicAuthPass from '../core/middleware/BasicAuthPass.js'; 
+   import BasicAuthPass from '../core/middleware/BasicAuthPass.js';
 
    routerAuth.use(BasicAuthPass)
    routerAuth.get("/upload", UserController.upload)
@@ -1336,7 +1346,7 @@ Before using mail, make sure you already setup `.env` file.
 
 ```
    import FirebaseCore from '../core/firebase/FirebaseCore.js';
-   
+
    const message = {
         title: "Notification", // notification title
         body: "Hello there",   // notification body

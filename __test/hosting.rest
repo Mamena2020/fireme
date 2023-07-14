@@ -1,6 +1,6 @@
 ### install REST Client extentions, before use this
 ### register
-POST  http://localhost:5000/api/register
+POST  https://fireme.vercel.app/api/register
 Content-Type: application/json
 
 {
@@ -10,32 +10,32 @@ Content-Type: application/json
     "confirm_password": "12345"
 }
 ### login
-POST  http://localhost:5000/api/login
+POST  https://fireme.vercel.app/api/login
 Content-Type: application/json
 
 {
-    "email": "andre3@gmail.com",
+    "email": "test@gmail.com",
     "password": "12345"
 }
 
 ### token
-GET http://localhost:5000/api/token
+GET https://fireme.vercel.app/api/token
 
 ### logout
-DELETE  http://localhost:5000/api/logout
+DELETE  https://fireme.vercel.app/api/logout
 
 ### users
-GET http://localhost:5000/api/users
+GET https://fireme.vercel.app/api/users
 
 ### NEED AUTH ------------------------------------------------
 ### current user
-GET http://localhost:5000/api/user
+GET https://fireme.vercel.app/api/user
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im9tVXBzdklBWEpsWUhaZXlrQ3I3IiwibmFtZSI6InRlc3QgYXBpIiwiZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsImlhdCI6MTY4OTM1OTg3NiwiZXhwIjoxNjg5MzYwNzc2fQ.KTE3tbMfaZiDiPv0rFK4prnXyfqEbM3aS84ieKue9lk
 
 ### upload avatar
-POST http://localhost:5000/api/user/avatar
+POST https://fireme.vercel.app/api/user/avatar
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im9tVXBzdklBWEpsWUhaZXlrQ3I3IiwibmFtZSI6InRlc3QgYXBpIiwiZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsImlhdCI6MTY4OTM1OTg3NiwiZXhwIjoxNjg5MzYwNzc2fQ.KTE3tbMfaZiDiPv0rFK4prnXyfqEbM3aS84ieKue9lk
 
 ### remove avatar
-DELETE http://localhost:5000/api/user/avatar
+DELETE https://fireme.vercel.app/api/user/avatar
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im9tVXBzdklBWEpsWUhaZXlrQ3I3IiwibmFtZSI6InRlc3QgYXBpIiwiZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsImlhdCI6MTY4OTM1OTg3NiwiZXhwIjoxNjg5MzYwNzc2fQ.KTE3tbMfaZiDiPv0rFK4prnXyfqEbM3aS84ieKue9lk

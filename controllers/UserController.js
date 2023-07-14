@@ -36,7 +36,7 @@ export default class UserController {
 
     static async user(req, res) {
         try {
-            return res.json({ message: 'get user', user: req.user });
+            return res.json({ message: 'get user', user: req.user, media: req.user.getMedia() });
         } catch (error) {
             console.error(error);
         }

@@ -21,9 +21,9 @@ const JwtAuthPass = async (req, res, next) => {
         if (error) return res.status(403).json({ message: 'unauthorized' });
         const currentDate = new Date();
         if (decoded.exp * 1000 < currentDate.getTime()) { return res.status(410).json({ message: 'access token expired' }); }
-
+        const email = decoded.email ?? null;
         if (AuthConfig.getUserOnRequest) {
-            req.user = await JwtAuth.getUser(req);
+            req.user = await JwtAuth.getUser(email);
         }
 
         return next();

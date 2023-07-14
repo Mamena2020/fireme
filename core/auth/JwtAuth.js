@@ -55,17 +55,17 @@ class JwtAuth {
      * @param {*} req request
      * @returns
      */
-    static async getUser(req) {
+    static async getUser(email) {
         try {
-            const { refreshToken } = req.cookies;
-            if (!refreshToken) {
-                throw Error('no refresh token');
-            }
+            // const { refreshToken } = req.cookies;
+            // if (!refreshToken) {
+            //     throw Error('no refresh token');
+            // }
             const user = await AuthConfig.user.findOne({
                 where: [{
-                    field: 'refresh_token',
+                    field: 'email',
                     operator: Operator.equal,
-                    value: refreshToken,
+                    value: email,
                 }],
             });
 
