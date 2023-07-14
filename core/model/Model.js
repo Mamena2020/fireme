@@ -296,11 +296,11 @@ class Model {
        * @param {list} array of object
        * @returns object of data
        */
-    static async bulkStored({ list = [] }) {
+    static async bulkStored(list = []) {
         let status = false;
         try {
             await FirebaseCore.init();
-            if (!list) throw new Error('invalid list');
+            if (!list || !Array.isArray(list)) throw new Error('invalid list');
 
             list.forEach((e) => {
                 removeUnregisteredData(e, this.fields);

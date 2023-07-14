@@ -1,281 +1,414 @@
 # Fireme
-
+<center>
 Boilerplate for nodejs. base on express js with Firebase.
+</center>
+<center style='margin-top:20px; margin-bottom:20px;'>
+<img src='fireme.png' style='max-height:500px;'>
+</center>
 
-- Features
 
-  - Model - ORM
-  
-    Create model via cli and make relation between. 
-  - Media library 
-  
-    binding media to any Model, so any model can own the media, and will able to save media, get media, and destroy media.
-    Media can be stored to `Local storage` or `Firebase Storage`.
+- ### Features
+
+  - Model
+
+    Create model via cli.
+
+  - Media library
+
+    Any model can own the media, and will able to save media, get media, and destroy media.
+    Media stored to `Firebase Storage`.
+
   - File request handling
-    
-    Not worry about handling uploaded file, just upload from client side, and  you can access file in request, `req.body.avatar`.
+
+    Not worry about handling uploaded file, just upload from client side, and you can access file in request, `req.body.avatar`.
+
   - Request validation
-    
-    Determine if request passes the rule. 
+
+    Determine if request passes the rule.
     You can create `custom rule` via cli.
+
   - Role and Permissions
 
     Binding to any model, any model can have a role and permissions, set role, checking access.
-  - Resources
-    
-    Create custom resource from resources.
-  - Auth - JWT
-    
-    Create token, re generate token, and set middleware authorization for certain routes.
-  - Locale
-    
-    Enabled or disabled locale or just enabled on certain routes.
-  - Mail
-    
-    create mail via cli, and send mail with html, file, or just text.
-  - Firebase Cloud Messaging
-    
-    Sending push notification from server to client device.
-    
-  - Seeder
-    
-    Running seeder via cli.
-- Live demo
 
-  | Action    | Method | Auth   | Body            | EndPoint                                 |
-  | --------- | ------ | ------ | --------------- | ---------------------------------------- |
-  | Login     | POST   |        | email           | https://fireme-mamena2020.vercel.app/api/login    |
-  |           |        |        | password        |                                          |
-  |           |        |        |                 |                                          |
-  | Register  | POST   |        | email           | https://fireme-mamena2020.vercel.app/api/register |
-  |           |        |        | name            |                                          |
-  |           |        |        | password        |                                          |
-  |           |        |        | confirmPassword |                                          |
-  |           |        |        |                 |                                          |
-  | Token     | GET    |        |                 | https://fireme-mamena2020.vercel.app/api/token    |
-  |           |        |        |                 |                                          |
-  |           |        |        |                 |                                          |
-  | Logout    | DELETE |        |                 | https://fireme-mamena2020.vercel.app/api/logout   |
-  |           |        |        |                 |                                          |
-  | Get User  | GET    | Bearer |                 | https://fireme-mamena2020.vercel.app/api/user     |
-  |           |        | token  |                 |                                          |
-  |           |        |        |                 |                                          |
-  | Get Users | GET    |        |                 | https://fireme-mamena2020.vercel.app/api/users    |
-  |           |        |        |                 |                                          |
+  - Resources
+
+    Create custom resource from resources.
+
+  - Auth - JWT
+
+    Create token, re generate token, and set middleware authorization for certain routes.
+
+  - Locale
+
+    Enabled or disabled locale or just enabled on certain routes.
+
+  - Mail
+
+    create mail via cli, and send mail with html, file, or just text.
+
+  - Firebase Cloud Messaging
+
+    Sending push notification from server to client device.
+
+  - Seeder
+
+    Running seeder via cli.
+
+- ### Live demo
+
+  | Action        | Method | Auth   | Body             | EndPoint                                             |
+  | ------------- | ------ | ------ | ---------------- | ---------------------------------------------------- |
+  | Login         | POST   |        | email            | https://fireme-mamena2020.vercel.app/api/login       |
+  |               |        |        | password         |                                                      |
+  |               |        |        |                  |                                                      |
+  | Register      | POST   |        | email            | https://fireme-mamena2020.vercel.app/api/register    |
+  |               |        |        | name             |                                                      |
+  |               |        |        | password         |                                                      |
+  |               |        |        | confirm_password |                                                      |
+  |               |        |        |                  |                                                      |
+  | Token         | GET    |        |                  | https://fireme-mamena2020.vercel.app/api/token       |
+  |               |        |        |                  |                                                      |
+  |               |        |        |                  |                                                      |
+  | Logout        | DELETE |        |                  | https://fireme-mamena2020.vercel.app/api/logout      |
+  |               |        |        |                  |                                                      |
+  | Get User      | GET    | Bearer |                  | https://fireme-mamena2020.vercel.app/api/user        |
+  |               |        | token  |                  |                                                      |
+  |               |        |        |                  |                                                      |
+  | Upload avatar | POST   | Bearer | avatar (file)    | https://fireme-mamena2020.vercel.app/api/user/avatar |
+  |               |        | token  |                  |                                                      |
+  |               |        |        |                  |                                                      |
+  | Remove avatar | DELETE | Bearer |                  | https://fireme-mamena2020.vercel.app/api/user/avatar |
+  |               |        | token  |                  |                                                      |
+  |               |        |        |                  |                                                      |
+  | Get Users     | GET    |        |                  | https://fireme-mamena2020.vercel.app/api/users       |
+  |               |        |        |                  |                                                      |
 
 # Getting Started
 
-- Clone this repo `https` or `SSH`
+- ### Clone 
 
-Clone and move to directory project and run `npm install`
-
-```
-   git clone git@github.com:Mamena2020/nodemi.git
+Clone this repo `https` or `SSH` and move to directory project and run `npm install`
 
 ```
-
-- Create database `mysql` or `pgsql`
-
-```
-   #mysql example
-
-   mysql -u root -p
-   # enter your password
-
-   create database mydatabase;
-
-   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   #pgsql example
-
-   createdb -h localhost -p 5432 -U myPgUser mydatabase
+   git clone git@github.com:Mamena2020/fireme.git
 
 ```
 
-- Setup .env
+- ### Setup .env
 
-After creating your database, you can fill in the .env file and start your code.
+After clone, you can create `.env` file from `.env.example`.
 
 ```
    cp .env.example .env
 
 ```
 
+- ### Create firebase project
+
+Create new Firebase project on <a href='https://console.firebase.google.com'>Firebase Console</a>. 
+After create firebase project, go to `project settings -> service accounts`, then generate new private key, 
+after download Service Account .json, convert to `base64 string`, then set to 
+`FIREBASE_SERVICE_ACCOUNT_BASE64` in the `.env` file, and then go to firebase `storage` and copy firebase bucket name and
+set to `FIREBASE_STORAGE_BUCKET` in the `.env` file.
+
+```
+   FIREBASE_STORAGE_BUCKET=gs://your-project.appspot.com 
+   FIREBASE_SERVICE_ACCOUNT_BASE64= # base64 of firebaseServiceAccount.json 
+
+```
+
+After setup firebase config then you ready to write the code.
+
 # Model
 
-Create new model via cli.
+- Create new model via cli.
 
 ```
-   npx nodemi make:model Product
+   npx fireme make:model Product
 ```
 
-The model will be created in the `models` directory.
+The model will be created in the `models/Product.js` directory.
 
 ```
 
-   import { Model, DataTypes } from "sequelize";
-   import db from "../core/database/Database.js"
+   import Model, { DataTypes } from '../core/model/Model.js';
 
    class Product extends Model {}
+
    Product.init({
+    fields: {
         name: {
-          type: DataTypes.STRING,
-          allowNull: false
+            type: DataTypes.string,
         },
-      }, {
-        sequelize: db,
-        tableName: 'products',
-        modelName: 'Product',
-        timestamps: true
-      }
-   );
+        price: {
+            type: DataTypes.number,
+        },
+        description: {
+            type: DataTypes.string,
+            nullable: true,
+        },
+    },
+    collection: 'products',
+    hasRole: false,
+   });
 
    export default Product
 
 ```
 
-Automatically registered in the `loadModels` function in the `core/model/Models.js` file.
+- ### Store data
+
+Stored data using `stored` static method. This method will return object that you save or null if failed.
 
 ```
 
-   const loadModels = async () => {
+   const data = {
+      name: 'Macbook pro M1',
+      price: 20000,
+      description: 'Macbook pro chipset M1 16inch screen...',
+   };
 
-      await Product.sync({
-          alter: true, // not recomended on production mode
-      })
-
-       ....
+   const product = await Product.stored(data);
 
 ```
 
-Full <a target="_blank" href="https://sequelize.org/docs/v6/core-concepts/model-basics/"> documentation </a> of ORM
+Bulk stored, stored many data at once. This `bulkStored` static method will return boolean true if success false if failed.
 
-- Noted
+```
 
-All relationships between models should be defined in the `loadModels` function.
-When a model is removed from the `models` directory, it is important to also remove its corresponding relationship from the `loadModels` function in the `core/model/Models.js` file.
+   const data = [
+        {
+           name: 'Macbook pro M1',
+           price: 20000,
+           description: 'Macbook pro chipset M1 16inch screen...',
+        },
+        {
+           name: 'Macbook pro M2',
+           price: 40000,
+           description: 'Macbook pro chipset M2 14inch screen...',
+        }
+   ];
+
+   const products = await Product.bulkStored(data);
+
+```
+
+- ### Update data
+
+Update data using `update` method. This method will return true if success or false if failed.
+
+```
+
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
+
+   const newData = {
+      price: 22000,
+   };
+
+   const updated = await product.update(newData);
+
+```
+
+Update many, using `update` static method. This method will return true if success or false if failed.
+
+```
+    const oldPrice = 20000;
+    const newPrice = 22000;
+
+    const updated = await Product.update({
+            data: {
+                price: newPrice,
+            },
+            where: [
+                { field: 'price', operator: Operator.lte, value: oldPrice },
+            ],
+        });
+
+```
+
+- ### Delete data
+
+Delete data using `destroy` method. This method will return true if success or false if failed.
+
+```
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
+
+    const deleted = await product.destroy();
+
+```
+
+Delete many data using `destroy` static method. This method required `where` condition, and will return true if success or false if failed.
+
+```
+    const deleted = await Product.destroy({
+        where: [
+                 { field: 'price', operator: Operator.lt, value: 20000 },
+            ],
+    });
+
+```
+
+- ### Get data
+
+Get single data using `findOne` static method. This method required `where` condition will return object if success of null if failed.
+
+```
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
+
+```
+
+Get many data using `findAll` static method. This method required `where` condition, and have optional parameter `limit`, and `orderBy`.
+`orderBy` required 2 property `field` and `sort`, `sort` can be `asc` or `desc`.
+
+```
+    const products = await Product.findAll({
+                        where: [{
+                            field: 'price',
+                            operator: Operator.gte,
+                            value: 20000,
+                        }],
+                        limit: 10,
+                        orderBy: {
+                            field: "updated_at",
+                            sort: "desc"
+                        }
+                    });
+
+```
+
+- ### Operators
+
+```
+    equal: '==',
+    notEqual: '!=',
+    lt: '<',
+    lte: '<=',
+    gt: '>',
+    gte: '>=',
+    arrayContains: 'array-contains',
+    in: 'in',
+    like: 'like',
+    arrayContainsAny: 'array-contains-any',
+    startsWith: 'startsWith',
+    endsWith: 'endsWith',
+    contains: 'contains',
+
+```
+
+- ### Noted
+
+All model by default has `created_at` and `updated_at` property as timestamp.
+to convert to datetime using `toDate()`.
+
+```
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
+
+    const productData = {
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          created_at: product.created_at.toDate(),
+                          updated_at: product.updated_at.toDate(),
+                        }
+
+```
 
 # Media
 
-Any model can own media by binding the model to the media inside the `loadModels` function using `hasMedia(YourModel)`.
+Any model already has ability to save and get media.
+
+- ### Save a file
+
+Save file using `saveMedia` method. The method required file object and media name, and will return media object if success or null if failed.
+If the instance already has a file with the same name, then the file will be replaced with a new file.
+
+```
+    const id = req.params.id;
+    const { image } = req.body;
+
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
+
+    const media = await product.saveMedia(image, 'thumbnail');
 
 ```
 
-   const loadModels = async () => {
-
-      await Product.sync({
-          alter: true, // not recomended on production mode
-      })
-
-      await hasMedia(Product)
-
-```
-
-- Save a file
-
-After binding model using `hasMedia(YourModel)`, then your model will able to save a file using `instance.saveMedia(file,mediaName)`. If the instance already has a file with the same name, then the file will be replaced with a new file.
-
-```
-
-   const product = await Product.findOne({
-       where: {
-             id: 1
-       }
-   })
-
-   await product.saveMedia(req.body.file,"thumbnail") // if success then will return media url
-
-```
-
-You can save files to either `Local` storage or `Firebase` storage.
-
-To save to `Local` storage, just set your .env file `MEDIA_STORAGE=local` , and local storage directory name `MEDIA_LOCAL_STORAGE_DIR_NAME=storage`.
-
-```
-   MEDIA_STORAGE=local
-   MEDIA_LOCAL_STORAGE_DIR_NAME=storage
-```
-
-To save to `Firebase` storage, first create your `Service Account .json` on firebase <a href="https://console.firebase.google.com/">Firebase Console</a>, and download it to your project, then setup the .env file.
-
-```
-   MEDIA_STORAGE=firebase  # set to firebase
-   FIREBASE_STORAGE_BUCKET=gs://xxxxxx.appspot.com  # your firebase storage bucket
-   FIREBASE_SERVICE_ACCOUNT=firebaseServiceAccount.json #  your firebase service account
-```
-
-- Get media
+- ### Get media
 
 Get all media by calling `instance.getMedia()`.
 
 ```
 
-   const product = await Product.findOne({
-       where: {
-             id: 1
-       }
-   })
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
 
    product.getMedia() // return list of object
 
+```
+
+Get media by name, params is media name, will return media object if success and null if failed.
+
+```
+    product.getMedia('thumbnail') // return single object
+    product.getMedia('thumbnail').url // return single object url
 
 ```
 
-Get media by name, params is media name
+- ### Destroy media
+
+Destroy media by calling `instance.destroyMedia(mediaName)`. This method will return true if success and false if failed.
 
 ```
-    product.getMediaByName("thumbnail") // return single object
-    product.getMediaByName("thumbnail").url // return single object url
+    const product = await Product.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
 
-```
-
-Get media first media
-
-```
-    product.getFirstMedia()       // return single object
-    product.getFirstMedia().url   // return first media url
-
-```
-
-Get media with exception, params can be `string` or `array` of string
-
-```
-    product.getMediaExcept("thumbnail_mobile")  // return list of object with exception
+   const deleted = await product.destroyMedia('thumbnail')
 
 ```
 
-Get all media url,
+- ### Noted
 
-```
-    product.getMediaUrl()  // return list of media url
-
-```
-
-Get all media url with exception, params can be `string` or `array` of string
-
-```
-    product.getMediaUrlExcept(['thumbnail_mobile'])  // return list of url
-
-```
-
-- Destroy media
-
-Destroy media by calling `instance.destroyMedia(mediaName)`. return status deleted in boolean
-
-```
-
-   const product = await Product.findOne({
-       where: {
-             id: 1
-       }
-   })
-
-   await product.destroyMedia("thumbnail")
-
-```
-
-- Noted
-
-All media files will be automatically deleted whenever `instance` of your model is deleted.
+All media files will be automatically deleted whenever `instance` of model is deleted.
 
 # Request & Upload Files
 
@@ -304,7 +437,7 @@ Handling all upload files on `POST` and `PUT` method, and nested fields.
 Create Request validation via cli.
 
 ```
-   npx nodemi make:request ProductRequest
+   npx fireme make:request ProductRequest
 ```
 
 The Request will be created in the `requests` directory.
@@ -335,7 +468,7 @@ The Request will be created in the `requests` directory.
 
 ```
 
-- Basic usage.
+- ### Basic usage.
 
 ```
 
@@ -348,7 +481,7 @@ The Request will be created in the `requests` directory.
 
 ```
 
-Example html form.
+- ### Example html form.
 
 ```
 
@@ -395,7 +528,7 @@ Example html form.
 
 ```
 
-Example rules.
+- ### Example rules.
 
 ```
 
@@ -439,7 +572,7 @@ Example rules.
 
 ```
 
-Example error messages
+- ### Example error messages
 
 ```
 
@@ -505,7 +638,7 @@ Example error messages
 
 ```
 
-- Basic rules
+- ### Basic rules
 
   | Rule                 | Description                                 | Example                                                     |
   | -------------------- | ------------------------------------------- | ----------------------------------------------------------- |
@@ -547,7 +680,7 @@ Example error messages
   | min_digits           | check minumum digits of value               | "min_digits:20"                                             |
   | digits_between       | check digits bewteen of value               | "digits_between:5,10"                                       |
 
-- Custom
+- ### Custom
 
 Custom validation `messages` and `attribute`
 
@@ -572,7 +705,7 @@ Custom validation `messages` and `attribute`
 
 ```
 
-Direct add error messages
+- ### Direct add error messages
 
 ```
     const valid = new ProductRequest(req)
@@ -582,16 +715,16 @@ Direct add error messages
     {
         valid.addError("name","Name have to .....")
         valid.addError("name","Name must be .....")
-    
+
 
 ```
 
-- Custom Rule
+# Custom Rule
 
 Create Custom Rule via cli.
 
 ```
-   npx nodemi make:rule GmailRule
+   npx fireme make:rule GmailRule
 ```
 
 The Rule will be created in the `rules` directory.
@@ -627,7 +760,7 @@ The Rule will be created in the `rules` directory.
 
 ```
 
-Custom rule usage
+- ### Custom rule usage
 
 ```
     rules() {
@@ -639,85 +772,95 @@ Custom rule usage
     }
 ```
 
-- Noted
+- ### Noted
 
 Default error messages outputs are dependent on the locale. If you haven't set up the locale as a middleware, it will be set to English `en` by default.
 
 # Role and Permissions
 
-A user model can have a role by binding using `hasRole(YourModel)` function inside `loadModels` in `core/model/Models.js` file.
+A user model can have a role by set `hasRole` to true.
 
 ```
 
-   const loadModels = async () => {
-
-      await User.sync()
-
-      await hasRole(User)
-
-```
-
-- Set users role
-
-If the user instance already has a role, then the user role will be replaced with a new role. `instance.setRole(params)` params can be role `id` or `name`.
-
-```
-
-   let user = await User.create({
-         name: name,
-         email: email,
-         password: hashPassword
-   })
-
-   user.setRole("customer") // role id or name
+    User.init({
+        fields: {
+            name: {
+                type: DataTypes.string,
+            },
+            email: {
+                type: DataTypes.string,
+            },
+            password: {
+                type: DataTypes.string,
+            },
+        },
+        collection: 'users',
+        hasRole: true, // set true
+    });
 
 ```
 
-- Get role
+- ### Set role
+
+If the user instance already has a role, then the user role will be replaced with a new role. `instance.setRole(params)` params is role `name`. `setRole` will return status in boolean.
+
+```
+
+
+   const user = await User.stored({
+      name: 'andre',
+      emmail: 'andre@gmail.com',
+      password: 'mypassword',
+   });
+
+   const status = await user.setRole('admin');
+
+```
+
+- ### Get role
 
 Get role object by calling `instance.getRole()`, or direcly access role name `instance.getRole().name`.
 
 ```
 
-   user.getRole() // role object
-   user.getRole().name // role name
+   const role = user.getRole() // role object
+   const roleName = user.getRole().name // role name
 
 
 ```
 
-- Get permissions
+- ### Get permissions
 
-Get permission by calling `instance.getPermissions()` will get array of object, or `instance.getPermissionsName()` will get array of permissions name.
+Get permission by calling `instance.getRole().permissions` will get array of permissions name.
 
 ```
-
-   user.getPermissions()     //  array of permissions object
-   user.getPermissionsName() //  array of permissions name [ "user-create","user-stored"]
+   const permissions = user.getRole().permissions; //  array of permissions name [ "user-create","user-stored"]
 
 ```
 
 - Remove role
 
 ```
-
-   user.removeRole()
-
-```
-
-- Check user access
-
-Limitation user access using `GateAccess(userInstance,permissionNames)`, `permissionNames` must be an array of permission names.
+   const removed  = await user.removeRole();
 
 ```
 
-    if (!GateAccess(user, ["user-create","user-stored","user-access"]))
-        return res.sendStatus(403) // return forbidden status code
+- ### Check user access
+
+Limitation user access using `gateAccess(userInstance,permissionNames)`, `permissionNames` must be an array of permission names.
+
+```
+    import gateAccess from '../core/service/RolePermission/RolePermissionService.js';
+
+    if (!gateAccess(user, ["user-create","user-stored","user-access"]))
+        return res.sendStatus(403); // return forbidden status code
 
 ```
 
-- Add permissions
+- ### Add permissions
 
 ```
+   import Permission from '../core/service/RolePermission/Permission.js';
 
    const permissions = [
        "user-create",
@@ -729,51 +872,63 @@ Limitation user access using `GateAccess(userInstance,permissionNames)`, `permis
    ]
 
     for (let permission of permissions) {
-        await Permission.create({ name: permission })
+        await Permission.stored({ name: permission })
     }
 
 ```
 
-- Add Role
+- ### Add Role
 
 ```
+
+    import Role from '../core/service/RolePermission/Role.js';
 
     const roles = [ "admin","customer" ]
 
     for (let role of roles) {
-        await Role.create({ name: role })
+        await Role.stored({ name: role })
     }
 
 ```
 
-- Assigning Permissions to Roles
+- ### Add Permissions to Role
 
 Assign permissions to a role by using `roleInstance.assignPermissions(params)`, params can be a list of permissions `name` or `id`.
 
 ```
-
     const permissions = [
        "user-create",
        "user-stored"
     ]
 
-    let admin = await Role.findOne({ where: { name: "admin" } })
+    const roleAdmin = await Role.findOne({
+                        where: [{
+                            field: 'name',
+                            operator: Operator.equal,
+                            value: 'admin',
+                        }],
+                    });
 
-    if (admin) {
-        await admin.assignPermissions(permissions)
+    if (roleAdmin) {
+        await roleAdmin.update({permissions: permissions})
     }
 
 ```
+
+
+- ### Noted
+
+There is no ref between permission and role, permission only stored all permission. The role has own field type an array to stored permission. 
 
 # Resource
 
 Create new resource via cli.
 
 ```
-   npx nodemi make:resource UserResource
+   npx fireme make:resource UserResource
 ```
 
-The Resource will be created in `resources` directory.
+The Resource will be created in `resources/UserResource.js` directory.
 
 ```
 
@@ -797,19 +952,19 @@ The Resource will be created in `resources` directory.
 
 ```
 
-- Basic usage
+- ### Basic usage
 
 To create resources from a single object use `make` or `collection` for an array of objects.
 
 ```
 
-     let userResource = new UserResource().make(user) // for single object
+     let userResource = new UserResource().make(user); // for single object
 
-     let userResources = new UserResource().collection(users) // for array of object
+     let userResources = new UserResource().collection(users); // for array of object
 
 ```
 
-Example user resource
+- ### Example user resource
 
 ```
 
@@ -823,77 +978,49 @@ Example user resource
                      "id": data.id,
                      "name": data.name,
                      "email": data.email,
-                     "image": data.getMediaByName("avatar")?.url || '',
+                     "image": data.getMedia("avatar")?.url || '',
                      "role": data.getRole()?.name || '',
-                     "permissions": new PermissionResource().collection(data.getPermissions() || []),
                  }
        }
     }
 
 ```
 
-permissions resource
+- ### Example usage
 
 ```
 
-   class PermissionResource extends Resource {
-       constructor() {
-             super().load(this)
-         }
+    const user = await User.findOne({
+                        where: [{
+                            field: 'id',
+                            operator: Operator.equal,
+                            value: id,
+                        }],
+                    });
 
-         toArray(data) {
-             return {
-                 "id": data.id,
-                 "name": data.name
-             }
-       }
-   }
+   const userResource = new UserResource().make(user);
 
-```
-
-Example usage
+   return res.json(userResource);
 
 ```
 
-   const user = await User.findOne({
-       where: {
-             id: 1
-       }
-   })
-
-   let userResource = new UserResource().make(user)
-
-   res.json(userResource)
-
-```
-
-Example result
+- ### Example result
 
 ```
 
    {
-       "id": 1,
-       "name": "Andre",
-       "email": "andre@gmail.com",
-       "image": "http://localhost:5000/User-1/287d735a-2880-4d4f-9851-5055d1ba1aae.jpg",
-       "role": "customer",
-       "permissions": [
-           {
-               "id": 1,
-               "name": "user-create"
-           },
-           {
-               "id": 2,
-               "name": "user-stored"
-           }
-       ]
+       "id": 'b96jRXfy8nSfZqk545SN',
+       "name": 'Andre',
+       "email": 'andre@gmail.com',
+       "image": 'https://storage.googleapis.com/projectx.appspot.com/91ecb634-46dd-4fce-995c-b38d4eaa2bd1.jpeg',
+       "role": 'admin',
    }
 
 ```
 
-# Auth Jwt
+# Auth
 
-- Create token
+- ### Create token
 
 Create token by calling `JwtAuth.createToken()`, that will return `refreshToken` and `accessToken`.
 
@@ -912,17 +1039,17 @@ Create token by calling `JwtAuth.createToken()`, that will return `refreshToken`
 
 ```
 
-- Regenerate access token
+- ### Regenerate access token
 
 Regenerate access token by calling `JwtAuth.regenerateAccessToken(refreshToken)`, that will return new access token.
 
 ```
 
-   let accessToken = JwtAuth.regenerateAccessToken(refreshToken)
+   const accessToken = JwtAuth.regenerateAccessToken(refreshToken)
 
 ```
 
-- Get Auth user
+- ### Get Auth user
 
 Get authenticated user by `calling JwtAuth.getUser(req)`, that will get user by refresh token on request cookies.
 
@@ -935,7 +1062,7 @@ Get authenticated user by `calling JwtAuth.getUser(req)`, that will get user by 
 Or you just setup the .env `AUTH_GET_CURRENT_USER_ON_REQUEST=true` and you can access current authenticated user by access
 `req.user`.
 
-Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model inside the `AuthConfig` in the `core/config/Auth.js` file. It is crucial that your User model has a `refresh_token` column, as `JwtAuth.GetUser()` will retrieve the user instance based on the `refresh_token` by default. However, if you prefer to retrieve the current authenticated user in a different manner, you can modify the `JwtAuth.GetUser()` function to suit your needs in `core/auth/JwtAuth.js` file.
+Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model inside the `AuthConfig` in the `core/config/Auth.js` file. It is crucial that your User model has a `refresh_token` field, as `JwtAuth.GetUser()` will retrieve the user instance based on the `refresh_token` by default. However, if you prefer to retrieve the current authenticated user in a different manner, you can modify the `JwtAuth.GetUser()` function to suit your needs in `core/auth/JwtAuth.js` file.
 
 ```
    class AuthConfig {
@@ -947,12 +1074,13 @@ Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model 
        static user = User
 ```
 
-- Middleware auth
+- ### Middleware auth jwt
 
 For secure access to controller by adding `JwtAuthPass` to your router.
 
 ```
-
+   import JwtAuthPass from '../core/middleware/JwtAuthPass.js';
+   
    routerAuth.use(JwtAuthPass)
    routerAuth.get("/upload", UserController.upload)
 
@@ -960,9 +1088,30 @@ For secure access to controller by adding `JwtAuthPass` to your router.
 
 ```
 
+- ### Middleware basic auth
+
+For secure access to controller by adding `BasicAuthPass` to your router.
+
+```
+   import BasicAuthPass from '../core/middleware/BasicAuthPass.js'; 
+
+   routerAuth.use(BasicAuthPass)
+   routerAuth.get("/upload", UserController.upload)
+
+   app.use("/api",routerAuth)
+
+```
+
+Before using this, make sure already set username and password for basic auth in `.env` file.
+
+```
+    AUTH_BASIC_AUTH_USERNAME=myBasicUsername
+    AUTH_BASIC_AUTH_PASSWORD=myBasicPassword
+```
+
 # Locale
 
-- Config
+- ### Config
 
 Setup locale in `core/config/Locale.js`. by default locale setup to english `en`
 
@@ -976,7 +1125,7 @@ Setup locale in `core/config/Locale.js`. by default locale setup to english `en`
 
 You can add more locale Code to `locales`. By default `locales` are only available for English `en`, and for Indonesia `id`.
 
-- Default validation error Messages
+- ### Default validation error Messages
 
 After adding additional `locales`, it is important to update the validation error messages in the `core/locale/LangValidation.js` file, as the messages generated will depend on the selected locale.
 
@@ -1000,9 +1149,9 @@ After adding additional `locales`, it is important to update the validation erro
 
 ```
 
-- Use Locale
+- ### Use Locale
 
-Its easy to use locale, just setup .env `LOCALE_USE=true`, then this will effect to `all` routes, so that have to has a params for locale, for the API router it should be `/api/:locale` and for the web router it should be `/:locale`.
+Its easy to use locale, just setup `.env` `LOCALE_USE=true`, then this will effect to `all` routes, so that have to has a params for locale, for the API router it should be `/api/:locale` and for the web router it should be `/:locale`.
 
 ```
 
@@ -1019,9 +1168,10 @@ Its easy to use locale, just setup .env `LOCALE_USE=true`, then this will effect
 
 ```
 
-If you don't want to set the locale for all routes, only for a particular route, then simply set up the .env as `LOCALE_USE=false`. Then you can use the `LocalePass` middleware directly to your route.
+If you don't want to set the locale for all routes, only for a particular route, then simply set up the `.env` as `LOCALE_USE=false`. Then you can use the `LocalePass` middleware directly to your route.
 
 ```
+   import LocalePass from '../core/middleware/LocalePass.js';
 
    // example for web route
    app.get("/:locale",LocalePass, (req, res) => {
@@ -1036,16 +1186,16 @@ If you don't want to set the locale for all routes, only for a particular route,
 
 ```
 
-- Noted
+- ### Noted
 
-All routers that using `LocalePass` will have the locale Code on req, accessible via `req.locale`.
+All routers that using `LocalePass` will have the locale Code on `req`, accessible via `req.locale`.
 
 # Mail
 
 Create mail via cli.
 
 ```
-   npx nodemi make:mail AccountVerify
+   npx fireme make:mail AccountVerify
 ```
 
 The mail will be created in the `mails` directory, with `examplefile.txt` and `template.ejs`
@@ -1104,7 +1254,7 @@ The `template.ejs` using express view engine `ejs` to render html into mail cont
              Regards.
          </p>
          <p>
-             Nodemi
+             fireme
          </p>
      </body>
    </html>
@@ -1124,7 +1274,7 @@ To use this `template.ejs`, you need to add an `html` object with a `path` and `
         }
 ```
 
-- Basic usage
+- ### Basic usage
 
 To send email by calling `instance.send()`
 
@@ -1135,7 +1285,7 @@ To send email by calling `instance.send()`
 
 ```
 
-- Send file
+- ### Send file
 
 To send files, you need to add an `attachments` to `super().load()`. See full <a href="https://nodemailer.com/message/attachments/">doc</a>.
 
@@ -1149,7 +1299,7 @@ To send files, you need to add an `attachments` to `super().load()`. See full <a
 
 ```
 
-- Mail message options
+- ### Mail message options
 
 Message options that you can add into `super().load()`.
 
@@ -1168,9 +1318,9 @@ Message options that you can add into `super().load()`.
 | alternatives | An array of alternative text contents. See full <a href="https://nodemailer.com/message/alternatives/">doc</a>                       | array  | No       |
 | encoding     | optional transfer encoding for the textual parts.                                                                                    | string | No       |
 
-- Noted
+- ### Noted
 
-Before using mail, make sure you already setup .env file
+Before using mail, make sure you already setup `.env` file.
 
 ```
    MAIL_HOST= #example: smtp.gmail.com | smtp-relay.sendinblue.com
@@ -1182,9 +1332,11 @@ Before using mail, make sure you already setup .env file
 
 # Firebase Cloud Messaging
 
-- Send message
+- ### Send message
 
 ```
+   import FirebaseCore from '../core/firebase/FirebaseCore.js';
+   
    const message = {
         title: "Notification", // notification title
         body: "Hello there",   // notification body
@@ -1194,28 +1346,27 @@ Before using mail, make sure you already setup .env file
         registrationTokens: ["token1","token2"] // target token
    }
 
-   await FirebaseService.sendMessage(message)
+   await FirebaseCore.sendMessage(message)
 
 ```
 
-- Noted
+- ### Noted
 
-Before using FCM, make sure you already `enable` Firebase Cloud Messaging API on <a href="https://console.cloud.google.com/">Google Cloud Console</a>, by selecting your project and navigating to `APIs & Services`. Once you have enabled the API, you can set up your .env
+Before using FCM, make sure you already `enable` Firebase Cloud Messaging API on <a href="https://console.cloud.google.com/">Google Cloud Console</a>, by selecting your project and navigating to `APIs & Services`. Once you have enabled the API, you can set up your .env file.
 
 ```
-   FIREBASE_SERVICE_ACCOUNT=firebaseServiceAccount.json # firebase service account
    FIREBASE_CLOUD_MESSAGING_SERVER_KEY= #fcm server key
 
 ```
 
 # Seeder
 
-- Running seeder
+- ### Running seeder
 
 Running seeder via cli
 
 ```
-    npx nodemi seed:run
+    npx fireme seed:run
 ```
 
 You can put your seeder code inside `seeder` function in the `core/seeder/Seeder.js` file
@@ -1224,7 +1375,7 @@ You can put your seeder code inside `seeder` function in the `core/seeder/Seeder
 
    const seeder = async () => {
 
-         // put code here..
+         // put seeder code here..
 
    }
 
