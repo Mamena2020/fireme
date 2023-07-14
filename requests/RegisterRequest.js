@@ -12,6 +12,9 @@ class RegisterRequest extends RequestValidation {
      */
     rules() {
         return {
+            name: {
+                rules: ['required'],
+            },
             email: {
                 rules: ['required', 'email', 'unique:users,email'],
             },
