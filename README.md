@@ -909,7 +909,7 @@ Limitation user access using `gateAccess(userInstance,permissionNames)`, `permis
 
 - ### Add Permissions to Role
 
-Assign permissions to a role by update. permissions must be and array of permission names.
+Assign permissions to a role by update. Permissions must be an array of permission names.
 
 ```
     const permissions = [
@@ -1004,7 +1004,8 @@ To create resources from a single object use `make` or `collection` for an array
 - ### Example usage
 
 ```
-
+    const id = req.params.id;
+    
     const user = await User.findOne({
                         where: [{
                             field: 'id',
