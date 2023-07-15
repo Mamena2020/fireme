@@ -433,7 +433,7 @@ Handling Content-Type header for
       - application/x-www-form-urlencoded
 
 Handling all upload files on `POST` and `PUT` method, and nested fields.
-- ### file properties
+- ### File properties
 
 ```
      // uploaded file will have this property
@@ -853,7 +853,8 @@ Get permission by calling `instance.getRole().permissions` will get array of per
 
 ```
 
-- Remove role
+- ### Remove role
+Remove role from an instance.
 
 ```
    const removed  = await user.removeRole();
@@ -908,7 +909,7 @@ Limitation user access using `gateAccess(userInstance,permissionNames)`, `permis
 
 - ### Add Permissions to Role
 
-Assign permissions to a role by using `roleInstance.assignPermissions(params)`, params can be a list of permissions `name` or `id`.
+Assign permissions to a role by update. permissions must be and array of permission names.
 
 ```
     const permissions = [
