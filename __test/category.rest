@@ -1,0 +1,18 @@
+### install REST Client extentions, before use this
+### stored
+POST  http://localhost:5000/api/category
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NTY2MDUzLCJleHAiOjE2ODk1Njk2NTN9.NUnLI6SIha1f872tNlEkk7DIyGqoHg-zNowmuTbVjhc
+
+{
+    "name": "Charger"
+}
+
+
+### fetch
+GET http://localhost:5000/api/category
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NTY2MDUzLCJleHAiOjE2ODk1Njk2NTN9.NUnLI6SIha1f872tNlEkk7DIyGqoHg-zNowmuTbVjhc
+
+### delete
+DELETE http://localhost:5000/api/category/Nb5SlFqCjC2h9Jd4jvNs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NTY2MDUzLCJleHAiOjE2ODk1Njk2NTN9.NUnLI6SIha1f872tNlEkk7DIyGqoHg-zNowmuTbVjhc

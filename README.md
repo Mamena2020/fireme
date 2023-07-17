@@ -12,6 +12,7 @@ Boilerplate for nodejs. base on express js with Firebase.
   - Model
 
     Create model via cli.
+    Connect to firestore collections.
 
   - Media library
 
@@ -110,7 +111,7 @@ Create new Firebase project on <a href='https://console.firebase.google.com'>Fir
 After create firebase project, go to `project settings -> service accounts`, then generate new private key,
 after download Service Account .json, convert to `base64 string`, then set to
 `FIREBASE_SERVICE_ACCOUNT_BASE64` in the `.env` file, and then go to firebase `storage` and copy firebase bucket name and
-set to `FIREBASE_STORAGE_BUCKET` in the `.env` file.
+set to `FIREBASE_STORAGE_BUCKET` in the `.env` file, and also create firestore database.
 
 ```
    FIREBASE_STORAGE_BUCKET=gs://your-project.appspot.com

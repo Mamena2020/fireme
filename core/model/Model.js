@@ -212,7 +212,7 @@ class Model {
         batchGetPromises.push(Promise.all([queryBatchPromise]));
         // run batch read at same time
         await Promise.all(batchGetPromises)
-            .then((batchResults) => {
+            .then(async (batchResults) => {
                 let roles;
                 let snapshot;
                 if (hasRole) {
@@ -223,11 +223,15 @@ class Model {
                     const [querySnapshot] = batchResults;
                     snapshot = querySnapshot[0]?.docs ?? [];
                 }
+
+                const batchRefPromises = [];
+                const tampData = [];
                 for (let i = 0; i < snapshot.length; i += 1) {
                     const doc = snapshot[i];
                     // eslint-disable-next-line camelcase
                     const { medias, role_ref, ...data } = doc.data();
                     let role = null;
+
                     // eslint-disable-next-line camelcase
                     if (hasRole && roles.length > 0 && role_ref) {
                         for (let j = 0; j < roles.length; j += 1) {
@@ -238,18 +242,81 @@ class Model {
                             }
                         }
                     }
+                    const dd = {};
+                    const refsTemp = [];
+                    // eslint-disable-next-line no-restricted-syntax
+                    for (const field in data) {
+                        if (Object.prototype.hasOwnProperty.call(data, field)) {
+                            const fieldValue = data[field];
+                            if (fieldValue
+                                instanceof FirebaseCore.admin.firestore.DocumentReference) {
+                                const ref = fieldValue;
+                                const collectionName = ref.parent.id;
+                                dd[collectionName] = null;
+                                refsTemp.push(ref.get());
+                            } else {
+                                dd[field] = fieldValue;
+                            }
+                        }
+                    }
+
+                    if (refsTemp.length > 0) {
+                        batchRefPromises.push(Promise.all(refsTemp));
+                    }
+
+                    tampData.push({
+                        doc,
+                        data: dd,
+                        role,
+                        medias: medias ?? [],
+                    });
+                    // list.push(
+                    //     Model.#instance(
+                    //         collection,
+                    //         fields,
+                    //         hasRole,
+                    //         doc,
+                    //         data,
+                    //         role,
+                    //         medias ?? [],
+                    //     ),
+                    // );
+                }
+                if (batchRefPromises.length > 0) {
+                    // console.info('ref exists');
+                    await Promise.all(batchRefPromises)
+                        .then((batchRefResults) => {
+                            // batchRefResults-> every main doc data
+                            batchRefResults.forEach((refDoc, index) => {
+                                refDoc.forEach((doc) => {
+                                    // console.info('doc', doc.data());
+                                    // console.info('tampData[index].data,', tampData[index].data);
+                                    // console.info('ref col name:', doc.ref.parent.id);
+                                    if (Object.prototype.hasOwnProperty.call(
+                                        tampData[index].data,
+                                        doc.ref.parent.id,
+                                    )) {
+                                        // console.info('smae');
+                                        tampData[index].data[doc.ref.parent.id] = doc.data();
+                                    }
+                                });
+                            });
+                        });
+                }
+
+                tampData.forEach((d) => {
                     list.push(
                         Model.#instance(
                             collection,
                             fields,
                             hasRole,
-                            doc,
-                            data,
-                            role,
-                            medias ?? [],
+                            d.doc,
+                            d.data,
+                            d.role,
+                            d.medias,
                         ),
                     );
-                }
+                });
             });
         return list;
     }
