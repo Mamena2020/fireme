@@ -295,6 +295,37 @@ Get many data using `findAll` static method. This method required `where` condit
                     });
 
 ```
+- ### Firestore core
+
+Using firestore instance directly. 
+
+```
+    import FirebaseCore from '../core/firebase/FirebaseCore.js';
+
+    const snapshot = await FirebaseCore.admin.firestore().collection('myCollection').get();
+        snapshot.docs.forEach((doc)=>{
+         .... document
+    });
+
+```
+
+- ### Instance info
+
+Any instance of model has 'info' method with information.
+
+```
+    const info = product.info();
+
+    // collection    -> collection name
+    // fields        -> fields of model
+    // hasRole       -> has role status
+    // doc           -> raw data of document
+    // id            -> document id
+    // ref           -> reference document
+    // role          -> role data
+    // medias        -> array of medias
+
+```
 
 - ### Field Data Types
 

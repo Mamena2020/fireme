@@ -5,7 +5,7 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NTY2MDUzLCJleHAiOjE2ODk1Njk2NTN9.NUnLI6SIha1f872tNlEkk7DIyGqoHg-zNowmuTbVjhc
 
 {
-    "name": "Charger"
+    "name": "Laptop"
 }
 
 
