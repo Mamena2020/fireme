@@ -29,7 +29,6 @@ const Operator = Object.freeze({
 });
 
 const roleCollection = 'roles';
-// const permissionCollection = "permissions"
 
 class Model {
     fields = {};
@@ -53,6 +52,9 @@ class Model {
 
     static #instance(collection, fields, hasRole, doc, data, role, medias = []) {
         return {
+            async refresh() {
+                return Model.#refresh(this);
+            },
             async destroy() {
                 return Model.#destroy(this);
             },
@@ -88,6 +90,7 @@ class Model {
                     doc,
                     id: doc.id,
                     ref: doc.ref,
+                    data,
                     role,
                     medias,
                 };
@@ -232,6 +235,7 @@ class Model {
                     const { medias, role_ref, ...data } = doc.data();
                     let role = null;
 
+                    // role process
                     // eslint-disable-next-line camelcase
                     if (hasRole && roles.length > 0 && role_ref) {
                         for (let j = 0; j < roles.length; j += 1) {
@@ -251,8 +255,9 @@ class Model {
                             if (fieldValue
                                 instanceof FirebaseCore.admin.firestore.DocumentReference) {
                                 const ref = fieldValue;
-                                const collectionName = ref.parent.id;
-                                dd[collectionName] = null;
+                                // const collectionName = ref.parent.id;
+                                // dd[collectionName] = null;
+                                dd[ref.path] = field;
                                 refsTemp.push(ref.get());
                             } else {
                                 dd[field] = fieldValue;
@@ -270,40 +275,38 @@ class Model {
                         role,
                         medias: medias ?? [],
                     });
-                    // list.push(
-                    //     Model.#instance(
-                    //         collection,
-                    //         fields,
-                    //         hasRole,
-                    //         doc,
-                    //         data,
-                    //         role,
-                    //         medias ?? [],
-                    //     ),
-                    // );
                 }
+
                 if (batchRefPromises.length > 0) {
                     // console.info('ref exists');
                     await Promise.all(batchRefPromises)
                         .then((batchRefResults) => {
-                            // batchRefResults-> every main doc data
-                            batchRefResults.forEach((refDoc, index) => {
-                                refDoc.forEach((doc) => {
+                            // batchRefResults-> every main doc data that has ref
+                            batchRefResults.forEach((refsDocs, index) => {
+                                // refsDocs ->
+                                refsDocs.forEach((doc) => {
                                     // console.info('doc', doc.data());
                                     // console.info('tampData[index].data,', tampData[index].data);
                                     // console.info('ref col name:', doc.ref.parent.id);
+                                    // if (Object.prototype.hasOwnProperty.call(
+                                    //     tampData[index].data,
+                                    //     doc.ref.parent.id,
+                                    // )) {
+                                    //     tampData[index].data[doc.ref.parent.id] = doc.data();
+                                    // }
                                     if (Object.prototype.hasOwnProperty.call(
                                         tampData[index].data,
-                                        doc.ref.parent.id,
+                                        doc.ref.path,
                                     )) {
-                                        // console.info('smae');
-                                        tampData[index].data[doc.ref.parent.id] = doc.data();
+                                        // tampData[index].data[doc.ref.parent.id] = doc.data();
+                                        const fieldName = tampData[index].data[doc.ref.path];
+                                        delete tampData[index].data[doc.ref.path];
+                                        tampData[index].data[fieldName] = doc.data();
                                     }
                                 });
                             });
                         });
                 }
-
                 tampData.forEach((d) => {
                     list.push(
                         Model.#instance(
@@ -483,7 +486,8 @@ class Model {
                 updated_at: timestamp,
             };
             await info.ref.update(newData)
-                .then(() => {
+                .then(async () => {
+                    await instance.refresh();
                     status = true;
                 });
         } catch (error) {
@@ -541,6 +545,40 @@ class Model {
                 .catch((error) => {
                     console.error('Error: ', error);
                 });
+        } catch (error) {
+            console.error(error);
+        }
+        return status;
+    }
+
+    /**
+     * Refresh data from an instance
+     * @param {*} instance of model
+     * @returns boolean
+     */
+    static async #refresh(instance) {
+        let status = false;
+        try {
+            const info = instance.info();
+            const query = FirebaseCore.admin.firestore().collection(info.collection)
+                .where('id', Operator.equal, info.id);
+            const list = await Model.#batchFetch(info.collection, info.fields, info.hasRole, query);
+            const newData = list[0] ?? null;
+            if (!newData) throw Error('failed to refresh data');
+            const newInfo = newData.info();
+            Object.assign(
+                instance,
+                this.#instance(
+                    newInfo.collection,
+                    newInfo.fields,
+                    newInfo.hasRole,
+                    newInfo.doc,
+                    newInfo.data,
+                    newInfo.role,
+                    newInfo.medias,
+                ),
+            );
+            status = true;
         } catch (error) {
             console.error(error);
         }

@@ -61,7 +61,8 @@ class RequestValidation {
 
     async load(child) {
         this.rules = child.rules();
-        // await this.check()
+        // eslint-disable-next-line no-param-reassign
+        child.body = this.body;
     }
 
     async #checkError() {

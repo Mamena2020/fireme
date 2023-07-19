@@ -1,0 +1,27 @@
+### install REST Client extentions, before use this
+### stored
+POST http://localhost:5000/api/test/category
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NzQ2MjIwLCJleHAiOjE2ODk3NDk4MjB9.7sooBDh146bsryjAJHxGxZl5bHyO0nfiswTIa3y8aKw
+
+{
+    "name": "Mouse"
+}
+
+
+### fetch
+GET http://localhost:5000/api/test/category
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NzQ2MjIwLCJleHAiOjE2ODk3NDk4MjB9.7sooBDh146bsryjAJHxGxZl5bHyO0nfiswTIa3y8aKw
+
+### update
+PUT http://localhost:5000/api/test/category/id
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NzQ2MjIwLCJleHAiOjE2ODk3NDk4MjB9.7sooBDh146bsryjAJHxGxZl5bHyO0nfiswTIa3y8aKw
+
+{
+    "name": "Laptop"
+}
+
+### delete
+DELETE http://localhost:5000/api/test/category/8K0wHrtpxKNNXAY7dXox
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlBxeTNBU2JjRkNIOXVPdUFVRWlwIiwibmFtZSI6ImFuZHJlIiwiZW1haWwiOiJhbmRyZTNAZ21haWwuY29tIiwiaWF0IjoxNjg5NzQ2MjIwLCJleHAiOjE2ODk3NDk4MjB9.7sooBDh146bsryjAJHxGxZl5bHyO0nfiswTIa3y8aKw

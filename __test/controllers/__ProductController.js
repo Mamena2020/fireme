@@ -19,38 +19,6 @@
 //         });
 //     }
 
-//     static async fetch(req, res) {
-//         if (!gateAccess(req.user, ['product-access'])) {
-//             return res.json({ message: 'permission denied' });
-//         }
-
-//         const products = await Product.findAll({
-//             // orderBy: {
-//             //     "field": "updated_at",
-//             //     "sort": "desc"
-//             // }
-//             // where: [{ field: "name", operator: "like", value: "ona" }]
-//         });
-
-//         const productResource = [];
-
-//         products.forEach((e) => {
-//             productResource.push({
-//                 id: e.id,
-//                 name: e.name,
-//                 price: e.price,
-//                 created_at: e.created_at.toDate(),
-//                 updated_at: e.updated_at.toDate(),
-//                 medias: e.getMedia(),
-//             });
-//         });
-
-//         return res.json({
-//             message: 'get products',
-//             products: productResource,
-//         });
-//     }
-
 //     static async search(req, res) {
 //         const { name } = req.params;
 
@@ -70,33 +38,6 @@
 //         res.json({
 //             message: 'search products',
 //             products: productResource,
-//         });
-//     }
-
-//     static async stored(req, res) {
-//         const { name, price } = req.body;
-
-//         const request = new ProductRequest(req);
-//         await request.check();
-//         if (request.isError) {
-//             return request.responseError(res);
-//         }
-
-//         if (!name || !price) { return res.status(422)
-// .json({ message: 'name and price required' }); }
-
-//         const data = {
-//             name,
-//             price,
-//         };
-
-//         const product = await Product.stored(data);
-
-//         if (!product) return res.json({ message: 'failed to stored' });
-
-//         return res.json({
-//             message: 'store product',
-//             user: product,
 //         });
 //     }
 
