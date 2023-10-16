@@ -296,12 +296,26 @@ Get many data using `findAll` static method. This method required `where` condit
 
 ```
 
+- ### Count
+
+Get count of collection from the database by calling  `count()`.  This method has `where` condition, and will return number if success of null if failed
+
+```
+    const totalProduct = await Product.count(
+                          where: [{
+                                field: 'price',
+                                operator: Operator.gte,
+                                value: 20000,
+                            }],
+                         );
+```
+
 - ### Refresh
 
 Reload an instance from the database by calling `refresh()`.
 
 ```
-    await products.refresh();
+    await product.refresh();
 ```
 
 - ### Firestore

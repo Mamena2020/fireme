@@ -100,6 +100,39 @@ class Model {
     }
 
     /**
+     * get count from collections
+     * @param {where} [  { field: 'age', operator: '>=', value: 18, and = true}
+     *  { field: 'city', operator: '===', value: "Timika", and = true },]
+     */
+    static async count({ where = [] } = {}) {
+        try {
+            const { collection } = this;
+            let query = FirebaseCore.admin.firestore().collection(collection);
+            if (where && where.length > 0) {
+                if (where && where.length > 0) {
+                    where.forEach(({
+                        field, operator, value, and,
+                    }) => {
+                        if (field === undefined || operator === undefined || value === undefined) {
+                            throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
+                        }
+                        if (and === undefined || and === true) {
+                            query = query.where(field, operator, value);
+                        } else {
+                            query = query.orWhere(field, operator, value);
+                        }
+                    });
+                }
+            }
+            const result = await query.count().get();
+            return result.data().count;
+        } catch (error) {
+            console.error(error);
+        }
+        return null;
+    }
+
+    /**
        * get list of data
        * @param { where} : [  { field: 'age', operator: '>=', value: 18, and = true}
        *  { field: 'city', operator: '===', value: "Timika", and = true },]
@@ -232,7 +265,7 @@ class Model {
                 for (let i = 0; i < snapshot.length; i += 1) {
                     const doc = snapshot[i];
                     // eslint-disable-next-line camelcase
-                    const { medias, role_ref, ...data } = doc.data();
+                    const { medias, role_ref, ...data } = doc.data(); // main data
                     let role = null;
 
                     // role process
@@ -257,10 +290,10 @@ class Model {
                                 const ref = fieldValue;
                                 // const collectionName = ref.parent.id;
                                 // dd[collectionName] = null;
-                                dd[ref.path] = field;
+                                dd[ref.path] = field; // ->  dd[categories/asdasda] = category
                                 refsTemp.push(ref.get());
                             } else {
-                                dd[field] = fieldValue;
+                                dd[field] = fieldValue; // -> dd[category] = undefined
                             }
                         }
                     }
@@ -285,23 +318,30 @@ class Model {
                             batchRefResults.forEach((refsDocs, index) => {
                                 // refsDocs ->
                                 refsDocs.forEach((doc) => {
-                                    // console.info('doc', doc.data());
-                                    // console.info('tampData[index].data,', tampData[index].data);
-                                    // console.info('ref col name:', doc.ref.parent.id);
-                                    // if (Object.prototype.hasOwnProperty.call(
-                                    //     tampData[index].data,
-                                    //     doc.ref.parent.id,
-                                    // )) {
-                                    //     tampData[index].data[doc.ref.parent.id] = doc.data();
-                                    // }
                                     if (Object.prototype.hasOwnProperty.call(
                                         tampData[index].data,
                                         doc.ref.path,
                                     )) {
                                         // tampData[index].data[doc.ref.parent.id] = doc.data();
                                         const fieldName = tampData[index].data[doc.ref.path];
+                                        // fieldName -> category
                                         delete tampData[index].data[doc.ref.path];
-                                        tampData[index].data[fieldName] = doc.data();
+                                        // delete -> tempData[index].data[categories/asdasd]
+                                        let refInstance;
+                                        if (doc.data()) {
+                                            const { medias, ...refData } = doc.data();
+                                            refInstance = Model.#instance(
+                                                doc.ref.parent.id,
+                                                {},
+                                                false,
+                                                doc,
+                                                refData,
+                                                null,
+                                                medias ?? [],
+                                            );
+                                        }
+                                        tampData[index].data[fieldName] = refInstance;
+                                        // create new property -> data[category] = instance;
                                     }
                                 });
                             });
@@ -330,6 +370,7 @@ class Model {
        * @returns object of data || null
        */
     static async stored(data = {}) {
+        let instance = null;
         try {
             await FirebaseCore.init();
             removeUnregisteredData(data, this.fields);
@@ -344,21 +385,25 @@ class Model {
                 ...data,
             };
 
-            await docRef.set(dataToStore);
-            const doc = await docRef.get();
-            return Model.#instance(
-                this.collection,
-                this.fields,
-                this.hasRole,
-                doc,
-                doc.data(),
-                null,
-                [],
-            );
+            await docRef.set(dataToStore).then(() => {
+                // const doc = await docRef.get();
+                instance = Model.#instance(
+                    this.collection,
+                    this.fields,
+                    this.hasRole,
+                    docRef,
+                    dataToStore,
+                    null,
+                    [],
+                );
+            });
+            if (instance) {
+                await instance.refresh();
+            }
         } catch (error) {
             console.error(error);
         }
-        return null;
+        return instance;
     }
 
     /**
@@ -690,7 +735,7 @@ class Model {
                     media = _media;
                 }
             });
-            if (media === undefined) throw new Error('media not found');
+            if (media === undefined) throw new Error('failed to destroy media -> media not found');
             // remove old media
             await FirebaseCore.deleteMedia(media.path).finally(async () => {
                 const docRef = FirebaseCore.admin.firestore()
