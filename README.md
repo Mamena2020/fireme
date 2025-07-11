@@ -113,7 +113,7 @@ after download Service Account .json, convert to `base64 string`, then set to
 `FIREBASE_SERVICE_ACCOUNT_BASE64` in the `.env` file, and then go to firebase `storage` and copy firebase bucket name and
 set to `FIREBASE_STORAGE_BUCKET` in the `.env` file, and also create firestore database.
 
-```
+``` env
    FIREBASE_STORAGE_BUCKET=gs://your-project.appspot.com
    FIREBASE_SERVICE_ACCOUNT_BASE64= # base64 of firebaseServiceAccount.json
 
@@ -131,7 +131,7 @@ After setup firebase config then you ready to write the code.
 
 The model will be created in the `models/Product.js` directory.
 
-```
+``` js
 
    import Model, { DataTypes } from '../core/model/Model.js';
 
@@ -162,7 +162,7 @@ The model will be created in the `models/Product.js` directory.
 
 Stored data using `stored` static method. This method will return object that you save or null if failed.
 
-```
+``` js
 
    const data = {
       name: 'Macbook pro M1',
@@ -176,7 +176,7 @@ Stored data using `stored` static method. This method will return object that yo
 
 Bulk stored, stored many data at once. This `bulkStored` static method will return boolean true if success false if failed.
 
-```
+``` js
 
    const data = [
         {
@@ -199,7 +199,7 @@ Bulk stored, stored many data at once. This `bulkStored` static method will retu
 
 Update data using `update` method. This method will return true if success or false if failed.
 
-```
+``` js
 
     const product = await Product.findOne({
                         where: [{
@@ -219,7 +219,7 @@ Update data using `update` method. This method will return true if success or fa
 
 Update many, using `update` static method. This method will return true if success or false if failed.
 
-```
+``` js
     const oldPrice = 20000;
     const newPrice = 22000;
 
@@ -238,7 +238,7 @@ Update many, using `update` static method. This method will return true if succe
 
 Delete data using `destroy` method. This method will return true if success or false if failed.
 
-```
+``` js
     const product = await Product.findOne({
                         where: [{
                             field: 'id',
@@ -253,7 +253,7 @@ Delete data using `destroy` method. This method will return true if success or f
 
 Delete many data using `destroy` static method. This method required `where` condition, and will return true if success or false if failed.
 
-```
+``` js
     const deleted = await Product.destroy({
         where: [
                  { field: 'price', operator: Operator.lt, value: 20000 },
@@ -266,7 +266,7 @@ Delete many data using `destroy` static method. This method required `where` con
 
 Get single data using `findOne` static method. This method required `where` condition will return object if success of null if failed.
 
-```
+``` js
     const product = await Product.findOne({
                         where: [{
                             field: 'id',
@@ -280,7 +280,7 @@ Get single data using `findOne` static method. This method required `where` cond
 Get many data using `findAll` static method. This method required `where` condition, and have optional parameter `limit`, and `orderBy`. <br>
 `orderBy` required 2 property `field` and `sort`, `sort` can be `asc` or `desc`.
 
-```
+``` js
     const products = await Product.findAll({
                         where: [{
                             field: 'price',
@@ -300,7 +300,7 @@ Get many data using `findAll` static method. This method required `where` condit
 
 Get count of collection from the database by calling  `count()`.  This method has `where` condition, and will return number if success of null if failed
 
-```
+``` js
     const totalProduct = await Product.count(
                           where: [{
                                 field: 'price',
@@ -314,7 +314,7 @@ Get count of collection from the database by calling  `count()`.  This method ha
 
 Reload an instance from the database by calling `refresh()`.
 
-```
+``` js
     await product.refresh();
 ```
 
@@ -322,7 +322,7 @@ Reload an instance from the database by calling `refresh()`.
 
 Using firestore instance directly.
 
-```
+``` js
     import FirebaseCore from '../core/firebase/FirebaseCore.js';
 
     const snapshot = await FirebaseCore.admin.firestore().collection('myCollection').get();
@@ -336,7 +336,7 @@ Using firestore instance directly.
 
 Any instance of model has 'info' method with information.
 
-```
+``` js
     const info = product.info();
 
     // collection    -> collection name
@@ -353,7 +353,7 @@ Any instance of model has 'info' method with information.
 
 - ### Field Data Types
 
-```
+``` js
     string: 'string',
     number: 'number',
     boolean: 'boolean',
@@ -367,7 +367,7 @@ Any instance of model has 'info' method with information.
 
 - ### Operators
 
-```
+``` js
     equal: '==',
     notEqual: '!=',
     lt: '<',
@@ -389,7 +389,7 @@ Any instance of model has 'info' method with information.
 All model by default has `created_at` and `updated_at` property as timestamp.
 to convert to datetime using `toDate()`.
 
-```
+``` js
     const product = await Product.findOne({
                         where: [{
                             field: 'id',
@@ -417,7 +417,7 @@ Any model already has ability to save and get media.
 Save file using `saveMedia` method. The method required file object and media name, and will return media object if success or null if failed.
 If the instance already has a file with the same name, then the file will be replaced with a new file.
 
-```
+``` js
     const id = req.params.id;
     const { image } = req.body;
 
@@ -437,7 +437,7 @@ If the instance already has a file with the same name, then the file will be rep
 
 Get all media by calling `instance.getMedia()`.
 
-```
+``` js
 
     const product = await Product.findOne({
                         where: [{
@@ -453,7 +453,7 @@ Get all media by calling `instance.getMedia()`.
 
 Get media by name, params is media name, will return media object if success and null if failed.
 
-```
+``` js
     product.getMedia('thumbnail') // return single object
     product.getMedia('thumbnail').url // return single object url
 
@@ -463,7 +463,7 @@ Get media by name, params is media name, will return media object if success and
 
 Destroy media by calling `instance.destroyMedia(mediaName)`. This method will return true if success and false if failed.
 
-```
+``` js
     const product = await Product.findOne({
                         where: [{
                             field: 'id',
@@ -480,7 +480,7 @@ Destroy media by calling `instance.destroyMedia(mediaName)`. This method will re
 
 Using `saveMedia` directly and return url and path.
 
-```
+``` js
     const { avatar } = req.body;
 
     const myAvatar = await FirebaseCore.saveMedia(avatar);
@@ -490,7 +490,7 @@ Using `saveMedia` directly and return url and path.
 
 Using `deleteMedia` or `deleteMedias` to delete media.
 
-```
+``` js
     await FirebaseCore.deleteMedia(mediaPath); // delete single media.
 
     await FirebaseCore.deleteMedias(mediaPaths); // delete many media at once.
@@ -515,7 +515,7 @@ Handling all upload files on `POST` and `PUT` method, and nested fields.
 
 Uploaded file will have this properties.
 
-```
+``` js
 
      name           -> file name,
      encoding       -> file encoding,
@@ -537,7 +537,7 @@ Create Request validation via cli.
 
 The Request will be created in the `requests` directory.
 
-```
+``` js
 
    import RequestValidation from "../core/validation/RequestValidation.js"
 
@@ -565,7 +565,7 @@ The Request will be created in the `requests` directory.
 
 - ### Basic usage.
 
-```
+``` js
 
    const valid = new ProductRequest(req)
 
@@ -578,7 +578,7 @@ The Request will be created in the `requests` directory.
 
 - ### Example html form.
 
-```
+``` html
 
    <form action="endpoint" method="post" enctype="multipart/form-data">
       <div class="row justify-content-center d-flex">
@@ -625,7 +625,7 @@ The Request will be created in the `requests` directory.
 
 - ### Example rules.
 
-```
+``` js
 
    rules() {
      return {
@@ -669,7 +669,7 @@ The Request will be created in the `requests` directory.
 
 - ### Example error messages
 
-```
+``` js
 
    {
      "errors": {
@@ -779,7 +779,7 @@ The Request will be created in the `requests` directory.
 
 Custom validation `messages` and `attribute`
 
-```
+``` js
 
     rules() {
         return {
@@ -802,7 +802,7 @@ Custom validation `messages` and `attribute`
 
 - ### Direct add error messages
 
-```
+``` js
     const valid = new ProductRequest(req)
     await valid.check()
 
@@ -824,7 +824,7 @@ Create Custom Rule via cli.
 
 The Rule will be created in the `rules` directory.
 
-```
+``` js
     class GmailRule  {
 
         constructor() {
@@ -857,7 +857,7 @@ The Rule will be created in the `rules` directory.
 
 - ### Custom rule usage
 
-```
+``` js
     rules() {
         return {
                 "email": {
@@ -875,7 +875,7 @@ Default error messages outputs are dependent on the locale. If you haven't set u
 
 A user model can have a role by set `hasRole` to true.
 
-```
+``` js
 
     User.init({
         fields: {
@@ -899,7 +899,7 @@ A user model can have a role by set `hasRole` to true.
 
 If the user instance already has a role, then the user role will be replaced with a new role. `instance.setRole(params)` params is role `name`. `setRole` will return status in boolean.
 
-```
+``` js
 
 
    const user = await User.stored({
@@ -916,7 +916,7 @@ If the user instance already has a role, then the user role will be replaced wit
 
 Get role object by calling `instance.getRole()`, or direcly access role name `instance.getRole().name`.
 
-```
+``` js
 
    const role = user.getRole() // role object
    const roleName = user.getRole().name // role name
@@ -928,7 +928,7 @@ Get role object by calling `instance.getRole()`, or direcly access role name `in
 
 Get permission by calling `instance.getRole().permissions` will get array of permissions name.
 
-```
+``` js
    const permissions = user.getRole().permissions; //  array of permissions name [ "user-create","user-stored"]
 
 ```
@@ -936,7 +936,7 @@ Get permission by calling `instance.getRole().permissions` will get array of per
 - ### Remove role
   Remove role from an instance.
 
-```
+``` js
    const removed  = await user.removeRole();
 
 ```
@@ -945,7 +945,7 @@ Get permission by calling `instance.getRole().permissions` will get array of per
 
 Limitation user access using `gateAccess(userInstance,permissionNames)`, `permissionNames` must be an array of permission names.
 
-```
+``` js
     import gateAccess from '../core/service/RolePermission/RolePermissionService.js';
 
     if (!gateAccess(user, ["user-create","user-stored","user-access"]))
@@ -955,7 +955,7 @@ Limitation user access using `gateAccess(userInstance,permissionNames)`, `permis
 
 - ### Add permissions
 
-```
+``` js
    import Permission from '../core/service/RolePermission/Permission.js';
 
    const permissions = [
@@ -975,7 +975,7 @@ Limitation user access using `gateAccess(userInstance,permissionNames)`, `permis
 
 - ### Add Role
 
-```
+``` js
 
     import Role from '../core/service/RolePermission/Role.js';
 
@@ -991,7 +991,7 @@ Limitation user access using `gateAccess(userInstance,permissionNames)`, `permis
 
 Assign permissions to a role by update. Permissions must be an array of permission names.
 
-```
+``` js
     const permissions = [
        "user-create",
        "user-stored"
@@ -1025,7 +1025,7 @@ Create new resource via cli.
 
 The Resource will be created in `resources/UserResource.js` directory.
 
-```
+``` js
 
    import Resource from "../core/resource/Resource.js"
    class UserResource extends Resource {
@@ -1051,7 +1051,7 @@ The Resource will be created in `resources/UserResource.js` directory.
 
 To create resources from a single object use `make` or `collection` for an array of objects.
 
-```
+``` js
 
      let userResource = new UserResource().make(user); // for single object
 
@@ -1061,7 +1061,7 @@ To create resources from a single object use `make` or `collection` for an array
 
 - ### Example user resource
 
-```
+``` js
 
    class UserResource extends Resource {
        constructor() {
@@ -1083,7 +1083,7 @@ To create resources from a single object use `make` or `collection` for an array
 
 - ### Example usage
 
-```
+``` js
     const id = req.params.id;
 
     const user = await User.findOne({
@@ -1102,7 +1102,7 @@ To create resources from a single object use `make` or `collection` for an array
 
 - ### Example result
 
-```
+``` js
 
    {
        "id": 'b96jRXfy8nSfZqk545SN',
@@ -1120,7 +1120,7 @@ To create resources from a single object use `make` or `collection` for an array
 
 Create token by calling `JwtAuth.createToken()`, that will return `refreshToken` and `accessToken`.
 
-```
+``` js
    const payload = {
          id: user.id,
          name: user.name,
@@ -1139,7 +1139,7 @@ Create token by calling `JwtAuth.createToken()`, that will return `refreshToken`
 
 Regenerate access token by calling `JwtAuth.regenerateAccessToken(refreshToken)`, that will return new access token.
 
-```
+``` js
 
    const accessToken = JwtAuth.regenerateAccessToken(refreshToken)
 
@@ -1149,7 +1149,7 @@ Regenerate access token by calling `JwtAuth.regenerateAccessToken(refreshToken)`
 
 Get authenticated user by `calling JwtAuth.getUser(email)`, that will get user by email.
 
-```
+``` js
 
    const user = await JwtAuth.getUser(email)
 
@@ -1158,7 +1158,7 @@ Get authenticated user by `calling JwtAuth.getUser(email)`, that will get user b
 Or you just setup the .env `AUTH_GET_CURRENT_USER_ON_REQUEST=true` and you can access current authenticated user by access
 `req.user`. You can found the code where current user instance set to req.user in `core/middleware/JwtAuthPass.js` file.
 
-```
+``` js
     req.user = await JwtAuth.getUser(email);
 ```
 
@@ -1166,7 +1166,7 @@ Before using `JwtAuth.GetUser()`, ensure that you have set up your `User` model 
 
 - Default user model for auth in `core/config/Auth.js`.
 
-```
+``` js
    class AuthConfig {
 
        /**
@@ -1182,7 +1182,7 @@ It is crucial that your User model has a `email` field, as `JwtAuth.GetUser()` w
 
 For secure access to controller by adding `JwtAuthPass` to your router.
 
-```
+``` js
    import JwtAuthPass from '../core/middleware/JwtAuthPass.js';
 
    routerAuth.use(JwtAuthPass)
@@ -1196,7 +1196,7 @@ For secure access to controller by adding `JwtAuthPass` to your router.
 
 For secure access to controller by adding `BasicAuthPass` to your router.
 
-```
+``` js
    import BasicAuthPass from '../core/middleware/BasicAuthPass.js';
 
    routerAuth.use(BasicAuthPass)
@@ -1208,7 +1208,7 @@ For secure access to controller by adding `BasicAuthPass` to your router.
 
 Before using this, make sure already set username and password for basic auth in `.env` file.
 
-```
+``` env
     AUTH_BASIC_AUTH_USERNAME=myBasicUsername
     AUTH_BASIC_AUTH_PASSWORD=myBasicPassword
 ```
@@ -1219,7 +1219,7 @@ Before using this, make sure already set username and password for basic auth in
 
 Setup locale in `core/config/Locale.js`. by default locale setup to english `en`
 
-```
+``` js
 
     defaultLocale: "en",
     useLocale: useLocale,
@@ -1233,7 +1233,7 @@ You can add more locale Code to `locales`. By default `locales` are only availab
 
 After adding additional `locales`, it is important to update the validation error messages in the `core/locale/LangValidation.js` file, as the messages generated will depend on the selected locale.
 
-```
+``` js
 
    const langValidation = Object.freeze({
        required: {
@@ -1257,7 +1257,7 @@ After adding additional `locales`, it is important to update the validation erro
 
 Its easy to use locale, just setup `.env` `LOCALE_USE=true`, then this will effect to `all` routes, so that have to has a params for locale, for the API router it should be `/api/:locale` and for the web router it should be `/:locale`.
 
-```
+``` js
 
    // example for api route
    const routerAuth = express.Router()
@@ -1274,7 +1274,7 @@ Its easy to use locale, just setup `.env` `LOCALE_USE=true`, then this will effe
 
 If you don't want to set the locale for all routes, only for a particular route, then simply set up the `.env` as `LOCALE_USE=false`. Then you can use the `LocalePass` middleware directly to your route.
 
-```
+``` js
    import LocalePass from '../core/middleware/LocalePass.js';
 
    // example for web route
@@ -1304,7 +1304,7 @@ Create mail via cli.
 
 The mail will be created in the `mails` directory, with `examplefile.txt` and `template.ejs`
 
-```
+``` js
 
    import Mail from "../../core/mail/Mail.js"
 
@@ -1338,7 +1338,7 @@ The mail will be created in the `mails` directory, with `examplefile.txt` and `t
 
 The `template.ejs` using express view engine `ejs` to render html into mail content.
 
-```
+``` html
    <!DOCTYPE html>
      <html lang="en">
      <head>
@@ -1367,7 +1367,7 @@ The `template.ejs` using express view engine `ejs` to render html into mail cont
 
 To use this `template.ejs`, you need to add an `html` object with a `path` and `data` (if needed) into `super().load()` method.
 
-```
+``` js
    html: {
             path: "mails/AccountVerify/template.ejs", // path is required
             data: // data is optional base on your template.ejs
@@ -1382,7 +1382,7 @@ To use this `template.ejs`, you need to add an `html` object with a `path` and `
 
 To send email by calling `instance.send()`
 
-```
+``` js
    const sendMail = new AccountVerify("from@gmail.com",["receiver@gmail.com"],"Verify Account")
 
    await sendMail.send()
@@ -1393,7 +1393,7 @@ To send email by calling `instance.send()`
 
 To send files, you need to add an `attachments` to `super().load()`. See full <a href="https://nodemailer.com/message/attachments/">doc</a>.
 
-```
+``` js
    attachments: [
                      {
                          filename: "theFile.txt",
@@ -1426,7 +1426,7 @@ Message options that you can add into `super().load()`.
 
 Before using mail, make sure you already setup `.env` file.
 
-```
+``` env
    MAIL_HOST= #example: smtp.gmail.com | smtp-relay.sendinblue.com
    MAIL_PORT=587
    MAIL_USERNAME=
@@ -1438,7 +1438,7 @@ Before using mail, make sure you already setup `.env` file.
 
 - ### Send message
 
-```
+``` js
    import FirebaseCore from '../core/firebase/FirebaseCore.js';
 
    const message = {
@@ -1458,7 +1458,7 @@ Before using mail, make sure you already setup `.env` file.
 
 Before using FCM, make sure you already `enable` Firebase Cloud Messaging API on <a href="https://console.cloud.google.com/">Google Cloud Console</a>, by selecting your project and navigating to `APIs & Services`. Once you have enabled the API, you can set up your .env file.
 
-```
+``` env
    FIREBASE_CLOUD_MESSAGING_SERVER_KEY= #fcm server key
 
 ```
@@ -1475,7 +1475,7 @@ Running seeder via cli
 
 You can put your seeder code inside `seeder` function in the `core/seeder/Seeder.js` file
 
-```
+``` js
 
    const seeder = async () => {
 
