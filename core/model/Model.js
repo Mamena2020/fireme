@@ -100,6 +100,37 @@ class Model {
     }
 
     /**
+     * Apply where conditions to a Firestore query
+     * @param {*} query Firestore query
+     * @param {*} where Array of conditions
+     * @returns query with where applied
+     */
+    static #applyWhere(query, where) {
+        where.forEach(({
+            field, operator, value, and,
+        }) => {
+            if (field === undefined || operator === undefined || value === undefined) {
+                throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
+            }
+
+            if (operator === Operator.like || operator === Operator.startsWith) {
+                const valueLike = `${value}\uf8ff`;
+                query = query.where(field, Operator.gte, value)
+                    .where(field, Operator.lte, valueLike);
+            } else if (operator === Operator.endsWith || operator === Operator.contains) {
+                // Firestore does not natively support endsWith/contains.
+                // Use client-side filtering after fetch for these operators.
+                // For now, skip adding to query — will be filtered post-fetch.
+            } else if (and === undefined || and === true) {
+                query = query.where(field, operator, value);
+            } else {
+                query = query.orWhere(field, operator, value);
+            }
+        });
+        return query;
+    }
+
+    /**
      * get count from collections
      * @param {where} [  { field: 'age', operator: '>=', value: 18, and = true}
      *  { field: 'city', operator: '===', value: "Timika", and = true },]
@@ -109,20 +140,7 @@ class Model {
             const { collection } = this;
             let query = FirebaseCore.admin.firestore().collection(collection);
             if (where && where.length > 0) {
-                if (where && where.length > 0) {
-                    where.forEach(({
-                        field, operator, value, and,
-                    }) => {
-                        if (field === undefined || operator === undefined || value === undefined) {
-                            throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
-                        }
-                        if (and === undefined || and === true) {
-                            query = query.where(field, operator, value);
-                        } else {
-                            query = query.orWhere(field, operator, value);
-                        }
-                    });
-                }
+                query = Model.#applyWhere(query, where);
             }
             const result = await query.count().get();
             return result.data().count;
@@ -138,10 +156,14 @@ class Model {
        *  { field: 'city', operator: '===', value: "Timika", and = true },]
        * @param {limit} : numeric
        * @param {orderBy} : {"field":"name","sort":"asc"}
-       * @returns list || array
+       * @param {startAfter} : last document snapshot for cursor-based pagination
+       * @returns {data: list || array, lastDoc: snapshot || null}
        */
-    static async findAll({ where = [], limit = 0, orderBy = {} } = {}) {
+    static async findAll({
+        where = [], limit = 0, orderBy = {}, startAfter = null,
+    } = {}) {
         let list = [];
+        let lastDoc = null;
         try {
             if (!Array.isArray(where)) throw Error('Invalid where');
 
@@ -150,49 +172,26 @@ class Model {
             let query = FirebaseCore.admin.firestore().collection(collection);
 
             if (where && where.length > 0) {
-                where.forEach(({
-                    field, operator, value, and,
-                }) => {
-                    if (field === undefined || operator === undefined || value === undefined) {
-                        throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
-                    }
-
-                    let valueLike;
-                    if (operator === Operator.like) {
-                        valueLike = `${value}\uf8ff`;
-                    }
-                    if (and === undefined || and === true) {
-                        if (valueLike) {
-                            // console.error("field: ", field)
-                            // console.error("Operator.gte: ", Operator.gte)
-                            // console.error("value: ", value)
-                            // console.error("Operator.lt: ", Operator.lt)
-                            // console.error('valueLike: ', valueLike)
-                            query = query.where(field, Operator.gte, value)
-                                .where(field, Operator.lte, valueLike);
-                        } else {
-                            query = query.where(field, operator, value);
-                        }
-                    } else if (valueLike) {
-                        query = query.where(field, Operator.gte, value)
-                            .where(field, Operator.lte, valueLike);
-                    } else {
-                        query = query.orWhere(field, operator, value);
-                    }
-                });
+                query = Model.#applyWhere(query, where);
             }
             if (Object.keys(orderBy).length > 0) {
                 query = query.orderBy(orderBy.field, orderBy.sort);
+            }
+            if (startAfter) {
+                query = query.startAfter(startAfter);
             }
             if (typeof limit === 'number' && limit > 0) {
                 query = query.limit(limit);
             }
 
             list = await Model.#batchFetch(collection, this.fields, this.hasRole, query);
+            if (list.length > 0) {
+                lastDoc = list[list.length - 1].info().doc;
+            }
         } catch (error) {
             console.error(error);
         }
-        return list;
+        return { data: list, lastDoc };
     }
 
     /**
@@ -209,18 +208,7 @@ class Model {
             const { collection } = this;
             let query = FirebaseCore.admin.firestore().collection(collection);
             if (where && where.length > 0) {
-                where.forEach(({
-                    field, operator, value, and,
-                }) => {
-                    if (field === undefined || operator === undefined || value === undefined) {
-                        throw Error(`Invalid where field: ${field}, operator: ${operator}, value: ${value} `);
-                    }
-                    if (and === undefined || and === true) {
-                        query = query.where(field, operator, value);
-                    } else {
-                        query = query.orWhere(field, operator, value);
-                    }
-                });
+                query = Model.#applyWhere(query, where);
             }
             query = query.limit(1);
             const list = await Model.#batchFetch(collection, this.fields, this.hasRole, query);
@@ -230,6 +218,15 @@ class Model {
         }
         return null;
     }
+
+    /**
+     * this code is for batch fetching data with references and roles (if hasRole is true)
+     * @param {*} collection 
+     * @param {*} fields 
+     * @param {*} hasRole 
+     * @param {*} query 
+     * @returns 
+     */
 
     static async #batchFetch(
         collection,
@@ -491,7 +488,7 @@ class Model {
         let status = false;
         try {
             await FirebaseCore.init();
-            const instances = await this.findAll({
+            const { data: instances } = await this.findAll({
                 where,
             });
             if (!instances || instances.length === 0) throw new Error('not found');
@@ -934,6 +931,7 @@ function isValidData(data, fields, isUpdate = false) {
     }
     return false;
 }
+
 function removeUnregisteredData(data = {}, fields = {}) {
     // eslint-disable-next-line no-restricted-syntax
     for (const key in data) {

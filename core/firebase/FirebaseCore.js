@@ -6,6 +6,8 @@ import firebaseConfig from '../config/Firebase.js';
 class FirebaseCore {
     static admin = admin;
 
+    static #initPromise = null;
+
     /**
      * Init firebase service to firebase admin
      * @returns
@@ -14,55 +16,56 @@ class FirebaseCore {
         // already init return instance of admin
         if (this.admin.apps.length) { return; }
 
-        // eslint-disable-next-line no-async-promise-executor
-        await new Promise(async (resolve, reject) => {
+        // prevent race condition: reuse the same init promise
+        if (this.#initPromise) {
+            await this.#initPromise;
+            return;
+        }
+
+        this.#initPromise = (async () => {
             try {
                 const jsonString = Buffer.from(firebaseConfig.ServiceAccountBase64, 'base64').toString('ascii');
-                const jsonData = await JSON.parse(jsonString);
+                const jsonData = JSON.parse(jsonString);
 
                 this.admin.initializeApp({
                     credential: this.admin.credential.cert(jsonData),
                     storageBucket: firebaseConfig.firebaseBucket,
                 });
-                resolve(this.admin);
             } catch (error) {
-                console.error(error);
-                reject();
+                this.#initPromise = null;
+                throw error;
             }
-        });
+        })();
+
+        await this.#initPromise;
     }
 
     /**
-   * Save single media to firebase storage
-   * @param {*} file
-   * @returns {} return url & path
-   */
-    static async saveMedia(file) {
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-            await this.init();
+     * Save single media to firebase storage
+     * @param {*} file
+     * @returns {} return url & path
+     */
+    static async saveMedia(file, isPublic = true) {
+        await this.init();
 
-            const bucket = this.admin.storage().bucket();
+        const bucket = this.admin.storage().bucket();
+        const fileName = uuid4() + file.extension;
+        const fileFirebase = bucket.file(fileName);
 
-            const fileName = uuid4() + file.extension;
-
-            const fileFirebase = bucket.file(fileName);
-
+        return new Promise((resolve, reject) => {
             const stream = fileFirebase.createWriteStream({
                 resumable: true,
-                public: true,
-                timeout: 120000, //  2m
+                public: isPublic,
+                timeout: 120000, // 2m
             });
 
             stream.on('error', (err) => {
-                console.error(err);
-                reject();
+                reject(new Error(`Failed to upload media: ${err.message}`));
             });
 
-            stream.on('finish', async () => {
-                // uploaded
+            stream.on('finish', () => {
                 resolve({
-                    url: fileFirebase.publicUrl(),
+                    url: isPublic ? fileFirebase.publicUrl() : null,
                     path: `${firebaseConfig.firebaseBucket}/${fileName}`,
                 });
             });
@@ -77,21 +80,18 @@ class FirebaseCore {
      * @returns
      */
     static async deleteMedia(path) {
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-            await this.init();
-            const fileName = path.split('/').pop();
-            const bucket = this.admin.storage().bucket();
-            const file = bucket.file(fileName);
+        await this.init();
+        const fileName = path.split('/').pop();
+        const bucket = this.admin.storage().bucket();
+        const file = bucket.file(fileName);
 
-            file.delete().then(() => {
-                // console.log(`File deleted successfully.`);
-                resolve(true);
-            }).catch((error) => {
-                reject();
-                console.error('Error deleting file:', error);
-            });
-        });
+        try {
+            await file.delete();
+            return true;
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            throw new Error(`Failed to delete media: ${error.message}`);
+        }
     }
 
     /**
@@ -100,19 +100,48 @@ class FirebaseCore {
      * @returns
      */
     static async deleteMedias(paths) {
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async (resolve, reject) => {
-            // console.log("start delete firebase files", paths)
+        if (!Array.isArray(paths)) {
+            throw new Error('paths must be an array');
+        }
 
-            if (!Array.isArray(paths)) { reject(); }
+        for (const path of paths) {
+            await this.deleteMedia(path);
+        }
+        return true;
+    }
 
-            // eslint-disable-next-line no-restricted-syntax
-            for (const path of paths) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.deleteMedia(path);
-            }
-            resolve(true);
+    /**
+     * Get file byte data from firebase storage (for private files)
+     * @param {string} path ex: gs://xxxxx.appspot.com/filename.jpg
+     * @returns {Buffer} file content as Buffer
+     */
+    static async getMediaBytes(path) {
+        await this.init();
+        const fileName = path.split('/').pop();
+        const bucket = this.admin.storage().bucket();
+        const file = bucket.file(fileName);
+
+        const [buffer] = await file.download();
+        return buffer;
+    }
+
+    /**
+     * Generate a temporary signed URL for private files
+     * @param {string} path ex: gs://xxxxx.appspot.com/filename.jpg
+     * @param {number} expiresInMs expiration in milliseconds (default: 15 minutes)
+     * @returns {string} signed URL
+     */
+    static async getSignedUrl(path, expiresInMs = 15 * 60 * 1000) {
+        await this.init();
+        const fileName = path.split('/').pop();
+        const bucket = this.admin.storage().bucket();
+        const file = bucket.file(fileName);
+
+        const [signedUrl] = await file.getSignedUrl({
+            action: 'read',
+            expires: Date.now() + expiresInMs,
         });
+        return signedUrl;
     }
 
     static async sendMessage({
@@ -122,39 +151,34 @@ class FirebaseCore {
 
         await this.init();
 
-        const message = {};
-        const notification = {};
-        notification.title = title;
-        notification.body = body;
-        message.notification = notification;
-
-        if (Object.keys(data).length > 0) {
-            message.data = data;
-        }
-        message.token = registrationTokens.length === 1
-            ? registrationTokens[0] : registrationTokens;
+        const notification = { title, body };
 
         if (registrationTokens.length === 1) {
-            await this.admin.messaging().send(message)
-                .then((response) => {
-                    console.error('Successfully sent message:', response);
-                })
-                .catch((error) => {
-                    console.error('Error sending message:', error);
-                });
+            const message = { notification, token: registrationTokens[0] };
+            if (Object.keys(data).length > 0) {
+                message.data = data;
+            }
+            try {
+                const response = await this.admin.messaging().send(message);
+                console.info('Successfully sent message:', response);
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
         } else {
-            await this.admin.messaging().sendMulticast(message)
-                .then((response) => {
-                    console.info(`${response.successCount} messages were sent successfully`);
-                })
-                .catch((error) => {
-                    console.error(`Error sending message: ${error}`);
-                });
+            const message = { notification, tokens: registrationTokens };
+            if (Object.keys(data).length > 0) {
+                message.data = data;
+            }
+            try {
+                const response = await this.admin.messaging().sendMulticast(message);
+                console.info(`${response.successCount} messages were sent successfully`);
+            } catch (error) {
+                console.error(`Error sending message: ${error}`);
+            }
         }
     }
 
     static getCurrentTimestamp() {
-        this.init();
         return this.admin.firestore.FieldValue.serverTimestamp();
     }
 }

@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 const BasicAuthPass = (req, res, next) => {
     // -----------------------------------------------------------------------
     // authentication middleware
@@ -6,14 +8,25 @@ const BasicAuthPass = (req, res, next) => {
         password: process.env.AUTH_BASIC_AUTH_PASSWORD,
     };
 
-    // parse  and password from headers
+    // parse username and password from headers
     const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
     const [username, password] = Buffer.from(b64auth, 'base64').toString().split(':');
 
-    // Verify login and password are set and correct
-    if (username && password && username === auth.username && password === auth.password) {
-        // Access granted...
-        return next();
+    // Verify login and password are set and correct (timing-safe comparison)
+    if (username && password && auth.username && auth.password) {
+        const usernameBuf = Buffer.from(username);
+        const authUsernameBuf = Buffer.from(auth.username);
+        const passwordBuf = Buffer.from(password);
+        const authPasswordBuf = Buffer.from(auth.password);
+        // timingSafeEqual requires same-length buffers, length mismatch = access denied
+        if (
+            usernameBuf.length === authUsernameBuf.length
+            && passwordBuf.length === authPasswordBuf.length
+            && crypto.timingSafeEqual(usernameBuf, authUsernameBuf)
+            && crypto.timingSafeEqual(passwordBuf, authPasswordBuf)
+        ) {
+            return next();
+        }
     }
 
     // Access denied...

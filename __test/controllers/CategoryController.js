@@ -13,12 +13,12 @@ export default class CategoryController {
      */
     static async fetch(req, res) {
         try {
-            const categories = await Category.findAll();
+            const { data: categories } = await Category.findAll();
             return res.json({ message: 'get categories', categories });
         } catch (error) {
             console.error(error);
         }
-        return res.status(409);
+        return res.status(409).json({ message: 'Something wrong' });
     }
 
     /**

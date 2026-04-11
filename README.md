@@ -109,9 +109,9 @@ After clone, you can create `.env` file from `.env.example`.
 
 Create new Firebase project on <a href='https://console.firebase.google.com'>Firebase Console</a>.
 After create firebase project, go to `project settings -> service accounts`, then generate new private key,
-after download Service Account .json, convert to `base64 string`, then set to
+after download Service Account .json, <a href='https://codebeautify.org/json-to-base64-converter'>convert</a> to `base64 string`, then set to
 `FIREBASE_SERVICE_ACCOUNT_BASE64` in the `.env` file, and then go to firebase `storage` and copy firebase bucket name and
-set to `FIREBASE_STORAGE_BUCKET` in the `.env` file, and also create firestore database.
+set to `FIREBASE_STORAGE_BUCKET` in the `.env` file, and also create firestore `database`.
 
 ``` env
    FIREBASE_STORAGE_BUCKET=gs://your-project.appspot.com
@@ -277,11 +277,12 @@ Get single data using `findOne` static method. This method required `where` cond
 
 ```
 
-Get many data using `findAll` static method. This method required `where` condition, and have optional parameter `limit`, and `orderBy`. <br>
-`orderBy` required 2 property `field` and `sort`, `sort` can be `asc` or `desc`.
+Get many data using `findAll` static method. This method required `where` condition, and have optional parameter `limit`, `orderBy`, and `startAfter` for cursor-based pagination. <br>
+`orderBy` required 2 property `field` and `sort`, `sort` can be `asc` or `desc`. <br>
+`findAll` returns an object `{ data, lastDoc }`, where `data` is the array of results and `lastDoc` is the last document snapshot for pagination.
 
 ``` js
-    const products = await Product.findAll({
+    const { data: products, lastDoc } = await Product.findAll({
                         where: [{
                             field: 'price',
                             operator: Operator.gte,
@@ -293,6 +294,29 @@ Get many data using `findAll` static method. This method required `where` condit
                             sort: "desc"
                         }
                     });
+
+```
+
+- ### Pagination
+
+Use `startAfter` with the `lastDoc` from a previous query to fetch the next page of results.
+
+``` js
+    // First page
+    const page1 = await Product.findAll({
+                        limit: 10,
+                        orderBy: { field: "created_at", sort: "desc" }
+                    });
+
+    // Next page using lastDoc from previous result
+    const page2 = await Product.findAll({
+                        limit: 10,
+                        orderBy: { field: "created_at", sort: "desc" },
+                        startAfter: page1.lastDoc
+                    });
+
+    // page2.data -> next 10 items
+    // page2.lastDoc -> use for page 3, null if no more data
 
 ```
 
@@ -488,12 +512,45 @@ Using `saveMedia` directly and return url and path.
     const { url, path } = myAvatar;
 ```
 
+Using `saveMedia` with `isPublic` set to false for private files.
+
+``` js
+    const myDocument = await FirebaseCore.saveMedia(file, false);
+
+    const { path } = myDocument; // url is null for private files
+```
+
 Using `deleteMedia` or `deleteMedias` to delete media.
 
 ``` js
     await FirebaseCore.deleteMedia(mediaPath); // delete single media.
 
     await FirebaseCore.deleteMedias(mediaPaths); // delete many media at once.
+```
+
+- ### Private Media Access
+
+For private files (uploaded with `isPublic = false`), there are two ways to access them:
+
+**Option 1: Signed URL** — Generate a temporary URL that expires. Client downloads directly from Firebase (recommended for previews, images, documents displayed in browser).
+
+``` js
+    // Default expiration: 15 minutes
+    const signedUrl = await FirebaseCore.getSignedUrl(media.path);
+
+    // Custom expiration: 1 hour
+    const signedUrl = await FirebaseCore.getSignedUrl(media.path, 60 * 60 * 1000);
+
+    return res.json({ url: signedUrl });
+```
+
+**Option 2: Byte Data** — Download file through server as Buffer. Use when you need to process the file or for highly sensitive files that should not have any external URL.
+
+``` js
+    const buffer = await FirebaseCore.getMediaBytes(media.path);
+
+    res.set('Content-Type', 'image/jpeg');
+    return res.send(buffer);
 ```
 
 
@@ -944,6 +1001,7 @@ Get permission by calling `instance.getRole().permissions` will get array of per
 - ### Check user access
 
 Limitation user access using `gateAccess(userInstance,permissionNames)`, `permissionNames` must be an array of permission names.
+Note: Users with the `super` role will always pass the access check regardless of permissions.
 
 ``` js
     import gateAccess from '../core/service/RolePermission/RolePermissionService.js';

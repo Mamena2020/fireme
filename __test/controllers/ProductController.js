@@ -5,22 +5,22 @@ import ProductStoreRequest from '../requests/product/ProductStoreRequest.js';
 import ProductUpdateRequest from '../requests/product/ProductUpdateRequest.js';
 
 export default class ProductController {
-     /**
-     * fetch
-     *
-     * @param {*} req express req
-     * @param {*} res express res
-     * @returns
-     */
+    /**
+    * fetch
+    *
+    * @param {*} req express req
+    * @param {*} res express res
+    * @returns
+    */
     static async fetch(req, res) {
         try {
-            const products = await Product.findAll();
+            const { data: products } = await Product.findAll();
             // console.info(products);
             return res.json({ message: 'get products', products });
         } catch (error) {
             console.error(error);
         }
-        return res.status(409);
+        return res.status(409).json({ message: 'Something wrong' });
     }
 
     /**

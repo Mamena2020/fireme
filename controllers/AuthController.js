@@ -23,11 +23,11 @@ export default class AuthController {
 
             await user.setRole('admin');
 
-            return res.json({ message: 'register success' }).status(200);
+            return res.status(200).json({ message: 'register success' });
         } catch (error) {
             console.error(error);
         }
-        return res.status(409);
+        return res.status(500).json({ message: 'internal server error' });
     }
 
     static async login(req, res) {
@@ -62,14 +62,15 @@ export default class AuthController {
 
             res.cookie('refreshToken', token.refreshToken, {
                 httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000,
-                // secure: true
+                maxAge: 24 * 60 * 60 * 1000, // 1 day
+                secure: process.env.APP_DEBUG !== 'true',
+                sameSite: 'strict',
             });
             return res.json({ message: 'login success', accessToken: token.accessToken });
         } catch (error) {
             console.error(error);
         }
-        return res.status(409);
+        return res.status(500).json({ message: 'internal server error' });
     }
 
     static async refreshToken(req, res) {
@@ -90,13 +91,13 @@ export default class AuthController {
 
             const accessToken = JwtAuth.regenerateAccessToken(refreshToken);
 
-            if (!accessToken) { res.status(403); }
+            if (!accessToken) { return res.sendStatus(403); }
 
             return res.json({ message: 'get token success', accessToken });
         } catch (error) {
             console.error(error);
         }
-        return res.sendStatus(409);
+        return res.status(500).json({ message: 'internal server error' });
     }
 
     static async logout(req, res) {
@@ -117,10 +118,14 @@ export default class AuthController {
                 refresh_token: null,
             });
 
-            return res.clearCookie('refreshToken').status(200).json({ message: 'logout success' });
+            return res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: process.env.APP_DEBUG !== 'true',
+                sameSite: 'strict',
+            }).status(200).json({ message: 'logout success' });
         } catch (error) {
             console.error(error);
         }
-        return res.sendStatus(409);
+        return res.status(500).json({ message: 'internal server error' });
     }
 }

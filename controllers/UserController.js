@@ -25,13 +25,13 @@ export default class UserController {
 
     static async users(req, res) {
         try {
-            const users = await User.findAll();
+            const { data: users } = await User.findAll();
             const userResources = new UserResource().collection(users);
             return res.json({ message: 'get users', users: userResources });
         } catch (error) {
             console.error(error);
         }
-        return res.status(409);
+        return res.status(500).json({ message: 'internal server error' });
     }
 
     static async user(req, res) {
@@ -45,6 +45,6 @@ export default class UserController {
         } catch (error) {
             console.error(error);
         }
-        return res.status(409);
+        return res.status(500).json({ message: 'internal server error' });
     }
 }

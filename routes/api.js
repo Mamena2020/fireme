@@ -14,6 +14,7 @@ export default function api(app) {
     routerGuest.get('/token', AuthController.refreshToken);
     routerGuest.delete('/logout', AuthController.logout);
     routerGuest.get('/users', UserController.users);
+    // routerAuth.get('/users', JwtAuthPass, UserController.users); // if want to get users with auth
     // routerAuthBasic.get('/user2', BasicAuthPass, AuthController.user);
     routerAuth.get('/user', JwtAuthPass, UserController.user);
     routerAuth.post('/user/avatar', JwtAuthPass, UserController.uploadAvatar);
