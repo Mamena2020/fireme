@@ -6,6 +6,12 @@
  */
 const gateAccess = (user, permissions = []) => {
     try {
+        
+        // check if permission is 1 word & string 
+        if (typeof permissions === 'string') {
+            permissions = [permissions];
+        }
+
         if (!Array.isArray(permissions)) throw Error('permissions must be an array');
 
         const role = user.getRole();

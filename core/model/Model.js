@@ -61,8 +61,8 @@ class Model {
             async update(newData) {
                 return Model.#update(this, newData);
             },
-            async saveMedia(file, name) {
-                return Model.#saveMedia(this, file, name);
+            async saveMedia(file, name, isPublic = true) {
+                return Model.#saveMedia(this, file, name, isPublic);
             },
             getMedia(name) {
                 return Model.#getMedia(this, name);
@@ -627,7 +627,7 @@ class Model {
         return status;
     }
 
-    static async #saveMedia(instance, file, name = '') {
+    static async #saveMedia(instance, file, name = '', isPublic = true) {
         if (!file || !file.extension || !name || !instance) {
             console.error('Save media failed: require all params, Please check file or name');
             return null;
@@ -635,7 +635,7 @@ class Model {
 
         const info = instance.info();
         const docRef = FirebaseCore.admin.firestore().collection(info.collection).doc(info.id);
-        const media = await FirebaseCore.saveMedia(file);
+        const media = await FirebaseCore.saveMedia(file, isPublic);
 
         if (!media) return null;
         const oldData = Object.keys(instance).reduce((result, key) => {
@@ -717,9 +717,9 @@ class Model {
             }
             medias.push(media);
         });
-        if (mediaTemp !== null) return mediaTemp;
-        if (name) return null;
-        return medias;
+        if (mediaTemp !== null) return mediaTemp; // if name found return media, if not found return all medias
+        if (name) return null; // if name provided but not found return null
+        return medias; // if name not provided return all medias
     }
 
     static async #destroyMedia(instance, name) {
@@ -931,7 +931,6 @@ function isValidData(data, fields, isUpdate = false) {
     }
     return false;
 }
-
 function removeUnregisteredData(data = {}, fields = {}) {
     // eslint-disable-next-line no-restricted-syntax
     for (const key in data) {

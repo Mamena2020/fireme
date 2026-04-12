@@ -441,6 +441,8 @@ Any model already has ability to save and get media.
 Save file using `saveMedia` method. The method required file object and media name, and will return media object if success or null if failed.
 If the instance already has a file with the same name, then the file will be replaced with a new file.
 
+The third parameter `isPublic` (default: `true`) controls whether the file is publicly accessible.
+
 ``` js
     const id = req.params.id;
     const { image } = req.body;
@@ -453,7 +455,11 @@ If the instance already has a file with the same name, then the file will be rep
                         }],
                     });
 
+    // Public file (default) - media.url will contain the public URL
     const media = await product.saveMedia(image, 'thumbnail');
+
+    // Private file - media.url will be null, use media.path to access it later
+    const media = await product.saveMedia(image, 'thumbnail', false);
 
 ```
 
@@ -471,7 +477,7 @@ Get all media by calling `instance.getMedia()`.
                         }],
                     });
 
-   product.getMedia() // return list of object
+   product.getMedia() // return list of object. ex: [{name, path, url}]
 
 ```
 
@@ -831,6 +837,10 @@ The Request will be created in the `requests` directory.
   | max_digits           | check maximum digits of value               | "max_digits:20"                                            |
   | min_digits           | check minumum digits of value               | "min_digits:20"                                            |
   | digits_between       | check digits bewteen of value               | "digits_between:5,10"                                      |
+  | age_lt               | check age is less than given years          | "age_lt:18"                                                |
+  | age_lte              | check age is less than or equal given years | "age_lte:18"                                               |
+  | age_gt               | check age is greater than given years       | "age_gt:18"                                                |
+  | age_gte              | check age is greater or equal given years   | "age_gte:18"                                               |
 
 - ### Custom
 
@@ -1281,11 +1291,24 @@ Setup locale in `core/config/Locale.js`. by default locale setup to english `en`
 
     defaultLocale: "en",
     useLocale: useLocale,
-    locales: ["en", "id"]
+    locales: ["en", "id", "es", "hi", "ru", "pt", "zh", "ja"]
 
 ```
 
-You can add more locale Code to `locales`. By default `locales` are only available for English `en`, and for Indonesia `id`.
+The following locales are built-in:
+
+| Code | Language   |
+| ---- | ---------- |
+| en   | English    |
+| id   | Indonesian |
+| es   | Spanish    |
+| hi   | Hindi      |
+| ru   | Russian    |
+| pt   | Portuguese |
+| zh   | Chinese    |
+| ja   | Japanese   |
+
+You can add more locale codes to `locales`.
 
 - ### Default validation error Messages
 

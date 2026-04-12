@@ -55,6 +55,7 @@ class RequestValidation {
     isError = false;
 
     constructor(req) {
+        this.req = req;
         this.body = req?.body ?? {};
         this.locale = req.locale || localeConfig.defaultLocale;
     }
