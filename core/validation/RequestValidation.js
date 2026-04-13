@@ -187,16 +187,16 @@ class RequestValidation {
         if (!langValidation[rule] || !langValidation[rule][this.locale]) { throw Error('message no exist'); }
         const newAttribute = attribute[0].toUpperCase() + attribute.slice(1);
 
-        let message = langValidation[rule][this.locale].replace('_attribute_', newAttribute);
+        let message = langValidation[rule][this.locale].replace('_attribute_', newAttribute); // ex: required -> The _attribute_ field is required. -> The Name field is required.
 
         if (options && Array.isArray(options)) {
             for (let i = 0; i < options.length; i += 1) {
                 const translateParam = Translate(options[i], this.locale);
-                message = message.replace((`_param${i + 1}_`).toString(), translateParam);
+                message = message.replace((`_param${i + 1}_`).toString(), translateParam); // ex: match:password -> message: The _attribute_ must match _param1_ -> The field must match password (translate if exist)
             }
         }
 
-        return message.split('_').join(' ');
+        return message.split('_').join(' '); // ex: birth_date -> Birth date
     }
 
     /**
@@ -240,8 +240,14 @@ class RequestValidation {
                 } else {
                     ruleName = rule;
                 }
-                isValid = await this.ValidationCheck(ruleName, value, { options });
-                if (!isValid) {
+                let errorOnValidationCheck = false;
+                isValid = await this.ValidationCheck(ruleName, value, { options },
+                    (msg) => {
+                        errorOnValidationCheck = true;
+                        this.addError(fieldKey, msg);
+                    }
+                );
+                if (!isValid && !errorOnValidationCheck) {
                     if (hasParams) {
                         ruleParams = this.#getValidateParams(rule);
                         // console.info('validationParams', ruleParams);
@@ -427,29 +433,33 @@ class RequestValidation {
      * @param {*} options  ex: {fieldMax: 3 }
      * @returns boolean -> true valid, false not valid
      */
-    async ValidationCheck(ruleName, value, { options }) {
+    async ValidationCheck(ruleName, value, { options }, onError) {
         // console.log("ruleName...", ruleName)
         // console.log("field...", field)
         // console.log("options...", options)
 
         // ------------------------------------------------------ database
         if (ruleName === ValidationType.exists) {
+            let dbError = false;
             const result = await ValidationDB.exists(
                 options.fieldCollectionName,
                 options.fieldName,
                 value,
                 options.fieldException,
+                () => { dbError = true; if (onError) onError('ERROR ON VALIDATION EXISTS: ' + ruleName); },
             );
-            return result;
+            return dbError ? false : result;
         }
         if (ruleName === ValidationType.unique) {
+            let dbError = false;
             const result = await ValidationDB.unique(
                 options.fieldCollectionName,
                 options.fieldName,
                 value,
                 options.fieldException,
+                () => { dbError = true; if (onError) onError('ERROR ON VALIDATION UNIQUE: ' + ruleName); },
             );
-            return result;
+            return dbError ? false : result;
         }
 
         // ------------------------------------------------------ has params

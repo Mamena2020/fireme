@@ -1,7 +1,7 @@
 import FirebaseCore from '../firebase/FirebaseCore.js';
 
 class ValidationDB {
-    static async #checkExists(collection, field, data, exception) {
+    static async #checkExists(collection, field, data, exception, onError) {
         // exists return true
         let status = false;
         let query = FirebaseCore.admin.firestore().collection(collection).where(field, '==', data);
@@ -13,7 +13,8 @@ class ValidationDB {
                 status = true;
             }
         }).catch((error) => {
-            console.error(error);
+            console.error('ValidationDB: ', error);
+            if (onError) onError(error);
         });
         return status;
     }
@@ -26,8 +27,8 @@ class ValidationDB {
      * @param {*} exception exception data id
      * @returns boolean
      */
-    static async exists(collection, field, data, exception) {
-        const result = await this.#checkExists(collection, field, data, exception);
+    static async exists(collection, field, data, exception, onError) {
+        const result = await this.#checkExists(collection, field, data, exception, onError);
         return result;
     }
 
@@ -39,8 +40,8 @@ class ValidationDB {
      * @param {*} exception exception data id
      * @returns boolean
      */
-    static async unique(collection, field, data, exception) {
-        const result = await this.#checkExists(collection, field, data, exception);
+    static async unique(collection, field, data, exception, onError) {
+        const result = await this.#checkExists(collection, field, data, exception, onError);
         return !result;
     }
 }

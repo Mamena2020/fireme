@@ -9,52 +9,19 @@ Boilerplate for nodejs. base on express js with Firebase.
 
 - ### Features
 
-  - Model
-
-    Create model via cli.
-    Connect to firestore collections.
-
-  - Media library
-
-    Any model can own the media, and will able to save media, get media, and destroy media.
-    Media stored to `Firebase Storage`.
-
-  - File request handling
-
-    Not worry about handling uploaded file, just upload from client side, and file will accessible at req, `req.body.avatar`.
-
-  - Request validation
-
-    Determine if request passes the rule.
-    You can create `custom rule` via cli.
-
-  - Role and Permissions
-
-    Any model can have a role and permissions, set role, checking access.
-
-  - Resources
-
-    Create custom resource from resources.
-
-  - Auth - JWT/Basic
-
-    Create token, re generate token, and set middleware authorization for certain routes.
-
-  - Locale
-
-    Enabled or disabled locale or just enabled on certain routes.
-
-  - Mail
-
-    create mail via cli, and send mail with html, file, or just text.
-
-  - Firebase Cloud Messaging
-
-    Sending push notification from server to client device.
-
-  - Seeder
-
-    Running seeder via cli.
+  | Feature | Description |
+  | --- | --- |
+  | Model | Create model via cli. Connect to firestore collections. |
+  | Media library | Any model can own the media, and will able to save media, get media, and destroy media. Media stored to `Firebase Storage`. |
+  | File request handling | Not worry about handling uploaded file, just upload from client side, and file will accessible at req, `req.body.avatar`. |
+  | Request validation | Determine if request passes the rule. You can create `custom rule` via cli. |
+  | Role and Permissions | Any model can have a role and permissions, set role, checking access. |
+  | Resources | Create custom resource from resources. |
+  | Auth - JWT/Basic | Create token, re generate token, and set middleware authorization for certain routes. |
+  | Locale | Enabled or disabled locale or just enabled on certain routes. |
+  | Mail | Create mail via cli, and send mail with html, file, or just text. |
+  | Firebase Cloud Messaging | Sending push notification from server to client device. |
+  | Seeder | Running seeder via cli. |
 
 - ### Live demo
 
