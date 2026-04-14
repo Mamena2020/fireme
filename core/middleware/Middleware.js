@@ -4,6 +4,7 @@ import CorsHandling from './CorsHandling.js';
 import mediaRequestHandling from './MediaRequestHandling.js';
 import localeConfig from '../config/Locale.js';
 import LocalePass from './LocalePass.js';
+import SanitizePass from './SanitizePass.js';
 
 /**
  * Default middleware
@@ -22,6 +23,8 @@ const defaultMiddleware = (app) => {
 
     // ------------------------------------------------------- files upload handling & nested field
     app.use(mediaRequestHandling);
+    // ------------------------------------------------------- sanitize req.body against XSS
+    app.use(SanitizePass);
     // ------------------------------------------------------- locale
     if (localeConfig.useLocale) {
         app.use(LocalePass);

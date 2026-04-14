@@ -2,6 +2,7 @@ import express from 'express';
 import JwtAuthPass from '../core/middleware/JwtAuthPass.js';
 import AuthController from '../controllers/AuthController.js';
 import UserController from '../controllers/UserController.js';
+import authRateLimit from '../core/middleware/RateLimitPass.js';
 // import BasicAuthPass from '../core/middleware/BasicAuthPass.js';
 
 export default function api(app) {
@@ -9,8 +10,8 @@ export default function api(app) {
     // const routerAuthBasic = express.Router();
     const routerAuth = express.Router();
 
-    routerGuest.post('/login', AuthController.login);
-    routerGuest.post('/register', AuthController.register);
+    routerGuest.post('/login', authRateLimit, AuthController.login);
+    routerGuest.post('/register', authRateLimit, AuthController.register);
     routerGuest.get('/token', AuthController.refreshToken);
     routerGuest.delete('/logout', AuthController.logout);
     routerGuest.get('/users', UserController.users);
