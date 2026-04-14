@@ -295,35 +295,37 @@ class Model {
                         }
                     }
 
-                    if (refsTemp.length > 0) {
-                        batchRefPromises.push(Promise.all(refsTemp));
-                    }
-
                     tampData.push({
                         doc,
                         data: dd,
                         role,
                         medias: medias ?? [],
                     });
+
+                    if (refsTemp.length > 0) {
+                        // track tampData index so results map to the correct document
+                        batchRefPromises.push({ tampIndex: tampData.length - 1, promise: Promise.all(refsTemp) });
+                    }
                 }
 
                 if (batchRefPromises.length > 0) {
                     // console.info('ref exists');
-                    await Promise.all(batchRefPromises)
+                    await Promise.all(batchRefPromises.map((entry) => entry.promise))
                         .then((batchRefResults) => {
                             // batchRefResults-> every main doc data that has ref
-                            batchRefResults.forEach((refsDocs, index) => {
+                            batchRefResults.forEach((refsDocs, i) => {
+                                const tampIndex = batchRefPromises[i].tampIndex;
                                 // refsDocs ->
                                 refsDocs.forEach((doc) => {
                                     if (Object.prototype.hasOwnProperty.call(
-                                        tampData[index].data,
+                                        tampData[tampIndex].data,
                                         doc.ref.path,
                                     )) {
-                                        // tampData[index].data[doc.ref.parent.id] = doc.data();
-                                        const fieldName = tampData[index].data[doc.ref.path];
+                                        // tampData[tampIndex].data[doc.ref.parent.id] = doc.data();
+                                        const fieldName = tampData[tampIndex].data[doc.ref.path];
                                         // fieldName -> category
-                                        delete tampData[index].data[doc.ref.path];
-                                        // delete -> tempData[index].data[categories/asdasd]
+                                        delete tampData[tampIndex].data[doc.ref.path];
+                                        // delete -> tempData[tampIndex].data[categories/asdasd]
                                         let refInstance;
                                         if (doc.data()) {
                                             const { medias, ...refData } = doc.data();
@@ -337,7 +339,7 @@ class Model {
                                                 medias ?? [],
                                             );
                                         }
-                                        tampData[index].data[fieldName] = refInstance;
+                                        tampData[tampIndex].data[fieldName] = refInstance;
                                         // create new property -> data[category] = instance;
                                     }
                                 });

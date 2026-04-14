@@ -507,7 +507,7 @@ class RequestValidation {
             if (Array.isArray(value)) { return value.length >= options.fieldMin; }
             if (validator.isNumeric(value.toString())) { return validator.isFloat(value.toString() ?? '0', { min: options.fieldMin ?? ' ' }); }
 
-            return value.toString().length >= options.fieldMax;
+            return value.toString().length >= options.fieldMin;
         }
 
         if (ruleName === ValidationType.mimetypes) {
